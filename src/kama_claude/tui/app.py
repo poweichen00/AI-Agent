@@ -496,7 +496,7 @@ class KamaTuiApp(App[None]):
         "[bold cyan]   / \\   __ _  ___ _ __ | |/ /[/bold cyan]\n"
         "[bold cyan]  / _ \\ / _` |/ _ \\ '_ \\| ' / [/bold cyan]\n"
         "[bold cyan] / ___ \\ (_| |  __/ | | | . \\ [/bold cyan]\n"
-        "[bold cyan]/_/   \\_\\__, |\\___|_| |_|_|\\_\\[/bold cyan]\n"
+        "[bold cyan]/_/   \\_\\__, |\\___|_| |_|_|\\_\\ [/bold cyan]\n"
         "[bold cyan]        |___/[/bold cyan]\n"
         "[dim]  輸入訊息開始對話  ·  鍵入 / 觸發 skill  ·  Ctrl+C 退出[/dim]"
     )
