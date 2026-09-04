@@ -1,0 +1,70 @@
+# AgentX 專案配置（PEP 621 + Hatch 構建 + 常用工具鏈）
+
+# ---- PEP 517：宣告如何構建 wheel/sdist ----
+[build-system]
+requires = ["hatchling"]          # 構建時需要的後端包
+build-backend = "hatchling.build" # 使用 Hatchling 作為構建後端
+
+# ---- 專案後設資料與執行時依賴（PEP 621）----
+[project]
+name = "agentx"
+version = "0.0.1"
+requires-python = ">=3.12,<3.13" # 僅支援 3.12 小版本範圍，與 CI/型別檢查一致
+dependencies = [
+    "pydantic>=2.0",       # 資料校驗與序列化（含 JSON 模型等）
+    "python-dotenv>=1.0",  # .env 檔案解析
+    "anthropic>=0.25",     # Anthropic LLM SDK（流式 + prompt caching）
+    "textual>=0.75",       # 終端 UI 框架（agentx-tui）
+    "httpx[socks]>=0.28.1",
+]
+
+# AgentX 是主要入口；舊 kama 入口暫時保留，方便平滑遷移與回滾。
+[project.scripts]
+agentx = "kama_claude.cli.main:main"
+agentx-core = "kama_claude.core.app:run"
+agentx-tui = "kama_claude.tui.__main__:main"
+kama = "kama_claude.cli.main:main"
+kama-core = "kama_claude.core.app:run"
+kama-tui = "kama_claude.tui.__main__:main"
+
+# ---- Hatch：打 wheel 時從 src 佈局收錄包 ----
+[tool.hatch.build.targets.wheel]
+packages = ["src/kama_claude"] # 原始碼在 src/kama_claude
+
+# ---- 開發期依賴（PEP 735）----
+[dependency-groups]
+dev = [
+    "ruff>=0.4",            # 快速 linter + import 排序等
+    "mypy>=1.10",           # 靜態型別檢查
+    "pytest>=8.0",          # 單元測試
+    "pytest-asyncio>=0.23", # 非同步測試支援
+]
+
+# ---- Ruff：統一程式碼風格 ----
+[tool.ruff]
+src = ["src"]            # 分析路徑，便於識別第一方程式碼
+line-length = 100        # 行長上限
+target-version = "py312" # 語法/規則按 Python 3.12
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"] # pycodestyle 錯誤、Pyflakes、isort、pyupgrade
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["E501"]   # 測試檔案的中文註釋允許超過行寬限制
+"scripts/**/*.py" = ["E501"] # 指令碼檔案的檔案字串允許超過行寬限制
+
+# ---- Mypy：嚴格型別檢查 ----
+[tool.mypy]
+python_version = "3.12"
+strict = true                 # 啟用嚴格模式
+mypy_path = "src"             # 將 src 加入模組搜尋路徑
+explicit_package_bases = true # 明確包根，減少隱式名稱空間誤判
+
+# ---- Pytest：預設發現 tests/，非同步用例自動管理 event loop ----
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "integration: marks tests that call the real Anthropic API (require ANTHROPIC_API_KEY)",
+]
