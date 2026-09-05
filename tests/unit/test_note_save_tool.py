@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from kama_claude.core.session.store import SessionStore
-from kama_claude.core.tools.builtin.note_save import NoteSaveTool
+from agentx.core.session.store import SessionStore
+from agentx.core.tools.builtin.note_save import NoteSaveTool
 
 
 # 功能：驗證 note_save 正常呼叫會把 content 寫入 notes.md

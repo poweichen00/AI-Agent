@@ -3,8 +3,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from kama_claude.core.bus.commands import PingCommand, PongResult
-from kama_claude.core.bus.events import CoreStartedEvent
+from agentx.core.bus.commands import PingCommand, PongResult
+from agentx.core.bus.events import CoreStartedEvent
 
 
 # 功能：驗證 PingCommand 序列化後再反序列化，client 和 type 欄位完整保留

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from kama_claude.core.tools.builtin.read_file import ReadFileTool
+from agentx.core.tools.builtin.read_file import ReadFileTool
 
 
 # 功能：驗證讀取存在的檔案時返回完整內容且 is_error 為 False

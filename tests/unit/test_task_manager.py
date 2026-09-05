@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from kama_claude.core.task.manager import TaskManager
+from agentx.core.task.manager import TaskManager
 
 
 # 功能：驗證 create 寫入 JSON 檔案並返回正確的 Task 物件

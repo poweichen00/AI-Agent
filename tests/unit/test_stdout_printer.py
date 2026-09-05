@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from kama_claude.cli.commands.run import StdoutPrinter
+from agentx.cli.commands.run import StdoutPrinter
 
 
 # 功能：驗證 run.started 事件在 stdout 中列印 [run] 字首和 run_id

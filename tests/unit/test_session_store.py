@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from kama_claude.core.session.model import Session
-from kama_claude.core.session.store import SessionStore
+from agentx.core.session.model import Session
+from agentx.core.session.store import SessionStore
 
 
 # 功能：驗證 SessionStore 初始化時自動建立 sessions 根目錄

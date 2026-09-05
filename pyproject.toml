@@ -18,18 +18,15 @@ dependencies = [
     "httpx[socks]>=0.28.1",
 ]
 
-# AgentX 是主要入口；舊 kama 入口暫時保留，方便平滑遷移與回滾。
+# AgentX 命令列入口。
 [project.scripts]
-agentx = "kama_claude.cli.main:main"
-agentx-core = "kama_claude.core.app:run"
-agentx-tui = "kama_claude.tui.__main__:main"
-kama = "kama_claude.cli.main:main"
-kama-core = "kama_claude.core.app:run"
-kama-tui = "kama_claude.tui.__main__:main"
+agentx = "agentx.cli.main:main"
+agentx-core = "agentx.core.app:run"
+agentx-tui = "agentx.tui.__main__:main"
 
 # ---- Hatch：打 wheel 時從 src 佈局收錄包 ----
 [tool.hatch.build.targets.wheel]
-packages = ["src/kama_claude"] # 原始碼在 src/kama_claude
+packages = ["src/agentx"] # 原始碼在 src/agentx
 
 # ---- 開發期依賴（PEP 735）----
 [dependency-groups]

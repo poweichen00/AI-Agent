@@ -4,7 +4,7 @@ import asyncio
 import subprocess
 from typing import Any
 
-from kama_claude.core.transport.socket_client import SocketClient
+from agentx.core.transport.socket_client import SocketClient
 
 
 # 功能：驗證 agent.run 命令返回非空 run_id，且 daemon 隨即廣播 run.started 事件

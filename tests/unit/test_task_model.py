@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from kama_claude.core.task.model import Task
+from agentx.core.task.model import Task
 
 
 # 功能：驗證 Task.to_dict() 包含所有預期欄位

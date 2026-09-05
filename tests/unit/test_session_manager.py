@@ -4,12 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from kama_claude.core.bus.envelope import HandlerError
-from kama_claude.core.events.bus import EventBus
-from kama_claude.core.runner import RunOutcome
-from kama_claude.core.session.manager import SESSION_CLOSED, SESSION_NOT_FOUND, SessionManager
-from kama_claude.core.session.model import Session
-from kama_claude.core.session.store import SessionStore
+from agentx.core.bus.envelope import HandlerError
+from agentx.core.events.bus import EventBus
+from agentx.core.runner import RunOutcome
+from agentx.core.session.manager import SESSION_CLOSED, SESSION_NOT_FOUND, SessionManager
+from agentx.core.session.model import Session
+from agentx.core.session.store import SessionStore
 
 
 class _Runner:
@@ -73,7 +73,7 @@ async def test_send_message_chat_enters_waiting_and_writes_thread(tmp_path: Path
 
 
 # 功能：驗證 one_shot session 在單次訊息完成後自動 closed
-# 設計：複用 mock runner 的成功路徑，聚焦 mode 對最終狀態的影響，保證 kama run 的統一路徑正確
+# 設計：複用 mock runner 的成功路徑，聚焦 mode 對最終狀態的影響，保證 agentx run 的統一路徑正確
 async def test_one_shot_auto_closes(tmp_path: Path) -> None:
     store = SessionStore(tmp_path)
     manager = SessionManager(store, lambda: _Runner(), EventBus())  # type: ignore[arg-type]

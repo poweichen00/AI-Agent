@@ -1,0 +1,50 @@
+from __future__ import annotations
+
+import json
+
+from agentx.core.task.manager import TaskManager
+from agentx.core.tools.base import BaseTool, ToolResult
+
+
+class TaskCreateTool(BaseTool):
+    name = "task_create"
+    description = (
+        "Create a new task to track a unit of work. "
+        "Use this to break down a complex goal into smaller, trackable steps. "
+        "Returns the created task as JSON."
+    )
+    input_schema: dict[str, object] = {
+        "type": "object",
+        "properties": {
+            "subject": {
+                "type": "string",
+                "description": "Short title for the task.",
+            },
+            "description": {
+                "type": "string",
+                "description": "Optional longer description of what needs to be done.",
+            },
+            "blocked_by": {
+                "type": "array",
+                "items": {"type": "integer"},
+                "description": "IDs of tasks that must be completed before this one.",
+            },
+        },
+        "required": ["subject"],
+    }
+
+    # 持有 TaskManager 例項，供 invoke 呼叫
+    def __init__(self, task_manager: TaskManager) -> None:
+        self._manager = task_manager
+
+    # 建立任務並返回 JSON 字串
+    async def invoke(self, params: dict[str, object]) -> ToolResult:
+        subject = str(params["subject"])
+        description = str(params.get("description") or "")
+        raw_blocked: list[object] = list(params.get("blocked_by") or [])  # type: ignore[call-overload]
+        blocked_by = [int(str(x)) for x in raw_blocked]
+        try:
+            task = self._manager.create(subject, description, blocked_by)
+            return ToolResult(content=json.dumps(task.to_dict(), ensure_ascii=False))
+        except ValueError as exc:
+            return ToolResult(content=str(exc), is_error=True, error_type="runtime_error")

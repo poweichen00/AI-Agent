@@ -2,7 +2,7 @@
 
 我最近在公眾號「卡碼大模型」上，更新了很多關於 Agent、codex、Claude工作原理的文章。
 
-這些文章目前已經沉澱在卡碼筆記上：[https://notes.kamacoder.com](https://notes.kamacoder.com)
+這些文章目前已經沉澱在卡碼筆記上：[https://notes.agentxcoder.com](https://notes.agentxcoder.com)
 
 ![](docs/images/2026-06-10_09-28-51.jpg)
 
@@ -131,7 +131,7 @@ CLI 和 TUI 只是客戶端。
 
 這個專案，我採用全新的講解方式，不是一下子直接給大家全部專案程式碼。
 
-而且分成了 8個階段，一步一步，帶大家實現完整的kamaClaude。
+而且分成了 8個階段，一步一步，帶大家實現完整的agentxClaude。
 
 每個階段都不是堆功能，而是解決一個真實的 Agent 工程問題。
 

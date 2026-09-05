@@ -22,11 +22,11 @@ def free_port() -> int:
 @pytest.fixture
 async def running_daemon(free_port: int) -> AsyncGenerator[subprocess.Popen[bytes], None]:
     env = os.environ.copy()
-    env["KAMA_PORT"] = str(free_port)
-    env["KAMA_LOG_FILE"] = ""
-    env["KAMA_LOG_LEVEL"] = "WARNING"
+    env["AGENTX_PORT"] = str(free_port)
+    env["AGENTX_LOG_FILE"] = ""
+    env["AGENTX_LOG_LEVEL"] = "WARNING"
 
-    proc = subprocess.Popen([sys.executable, "-m", "kama_claude.core"], env=env)
+    proc = subprocess.Popen([sys.executable, "-m", "agentx.core"], env=env)
 
     deadline = time.monotonic() + 3.0
     while time.monotonic() < deadline:

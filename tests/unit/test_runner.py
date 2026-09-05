@@ -5,10 +5,10 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from kama_claude.core.config import KamaConfig
-from kama_claude.core.events.bus import EventBus
-from kama_claude.core.llm.types import LlmResponse, ToolCallBlock
-from kama_claude.core.runner import AgentRunner
+from agentx.core.config import AgentXConfig
+from agentx.core.events.bus import EventBus
+from agentx.core.llm.types import LlmResponse, ToolCallBlock
+from agentx.core.runner import AgentRunner
 
 # --- mock provider -----------------------------------------------------------
 
@@ -76,8 +76,8 @@ class _CapturingProvider:
 # --- helpers -----------------------------------------------------------------
 
 
-def _config(max_steps: int = 5) -> KamaConfig:
-    cfg = KamaConfig()
+def _config(max_steps: int = 5) -> AgentXConfig:
+    cfg = AgentXConfig()
     cfg.agent.max_steps = max_steps
     return cfg
 
@@ -86,7 +86,7 @@ async def _run(
     goal: str = "test goal",
     *,
     provider: object | None = None,
-    config: KamaConfig | None = None,
+    config: AgentXConfig | None = None,
     tmp_path: Path,
 ) -> list[BaseModel]:
     collected: list[BaseModel] = []
@@ -204,7 +204,7 @@ async def test_run_id_embedded_in_started_event(tmp_path: Path) -> None:
 # 設計：顯式傳入 EventBus 例項並訂閱收集器，確認 runner 不再內部新建 bus（否則外部訂閱者收不到事件）；
 #       這是 CoreApp 注入全域性 bus 的核心行為，單元測試級別驗證可避免整合測試的守護程式依賴
 async def test_injected_bus_receives_events(tmp_path: Path) -> None:
-    from kama_claude.core.events.bus import EventBus
+    from agentx.core.events.bus import EventBus
 
     external_bus = EventBus()
     collected: list[object] = []
@@ -230,8 +230,8 @@ async def test_injected_bus_receives_events(tmp_path: Path) -> None:
 # 功能：驗證 session run 會從 thread.jsonl 預填 messages，並把 notes 注入 system prompt
 # 設計：用 CapturingProvider 截獲 LLM 入參，不觸發真實 API；同時斷言 run 目錄寫到 session/runs 下
 async def test_session_history_and_notes_injected(tmp_path: Path) -> None:
-    from kama_claude.core.session.model import Session
-    from kama_claude.core.session.store import SessionStore
+    from agentx.core.session.model import Session
+    from agentx.core.session.store import SessionStore
 
     store = SessionStore(tmp_path / "sessions")
     session = Session(
@@ -261,8 +261,8 @@ async def test_session_history_and_notes_injected(tmp_path: Path) -> None:
 # 功能：驗證 session run 中註冊了 note_save，工具呼叫會寫入 notes.md
 # 設計：mock provider 第一步請求 note_save、第二步 end_turn，覆蓋 runner→registry→tool invocation 的完整路徑
 async def test_session_registers_note_save_tool(tmp_path: Path) -> None:
-    from kama_claude.core.session.model import Session
-    from kama_claude.core.session.store import SessionStore
+    from agentx.core.session.model import Session
+    from agentx.core.session.store import SessionStore
 
     class _NoteProvider:
         # 初始化呼叫計數器，用於返回兩步響應

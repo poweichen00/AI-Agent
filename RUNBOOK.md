@@ -27,9 +27,9 @@ kill $(pgrep -f agentx-core)
 
 ## 配置
 
-優先順序（低 → 高）：**內建預設值 → `~/.kama/config.toml` → `.env` → 系統環境變數**。目前沿用舊資料目錄與 `KAMA_*` 環境變數，以保留既有執行記錄與配置。
+優先順序（低 → 高）：**內建預設值 → `~/.agentx/config.toml` → `.env` → 系統環境變數**。目前沿用舊資料目錄與 `AGENTX_*` 環境變數，以保留既有執行記錄與配置。
 
-### `~/.kama/config.toml`
+### `~/.agentx/config.toml`
 
 ```toml
 [core]
@@ -38,7 +38,7 @@ port = 7437
 
 [logging]
 level  = "INFO"
-file   = "~/.kama/logs/core.log"
+file   = "~/.agentx/logs/core.log"
 format = "text"    # "text" | "json"
 ```
 
@@ -54,12 +54,12 @@ cp .env.example .env
 
 | 變數 | 預設值 | 說明 |
 |------|--------|------|
-| `KAMA_CONFIG` | `~/.kama/config.toml` | 覆蓋配置檔案路徑 |
-| `KAMA_HOST` | `127.0.0.1` | TCP 監聽地址 |
-| `KAMA_PORT` | `7437` | TCP 監聽埠 |
-| `KAMA_LOG_LEVEL` | `INFO` | 日誌級別（DEBUG / INFO / WARNING / ERROR） |
-| `KAMA_LOG_FILE` | `~/.kama/logs/core.log` | 日誌檔案路徑（留空則僅輸出 stderr） |
-| `KAMA_LOG_FORMAT` | `text` | 日誌格式（`text` 或 `json`） |
+| `AGENTX_CONFIG` | `~/.agentx/config.toml` | 覆蓋配置檔案路徑 |
+| `AGENTX_HOST` | `127.0.0.1` | TCP 監聽地址 |
+| `AGENTX_PORT` | `7437` | TCP 監聽埠 |
+| `AGENTX_LOG_LEVEL` | `INFO` | 日誌級別（DEBUG / INFO / WARNING / ERROR） |
+| `AGENTX_LOG_FILE` | `~/.agentx/logs/core.log` | 日誌檔案路徑（留空則僅輸出 stderr） |
+| `AGENTX_LOG_FORMAT` | `text` | 日誌格式（`text` 或 `json`） |
 
 ---
 
@@ -80,7 +80,7 @@ make verify-s0                        # 完整驗證（lint + 型別 + 測試 + 
 ## 日誌
 
 ```bash
-tail -f ~/.kama/logs/core.log
+tail -f ~/.agentx/logs/core.log
 ```
 
 ---
@@ -91,5 +91,5 @@ tail -f ~/.kama/logs/core.log
 |------|------|------|
 | `core already running at 127.0.0.1:7437` | 已有守護程式在執行 | `kill $(pgrep -f agentx-core)` |
 | `core not running` | 未啟動守護程式 | `uv run agentx-core` |
-| `Address already in use` | 埠被其他程式佔用 | `KAMA_PORT=8000 uv run agentx-core` |
-| `Config error: KAMA_PORT must be an integer` | `.env` 或環境變數中埠值非整數 | 檢查 `KAMA_PORT` 的值 |
+| `Address already in use` | 埠被其他程式佔用 | `AGENTX_PORT=8000 uv run agentx-core` |
+| `Config error: AGENTX_PORT must be an integer` | `.env` 或環境變數中埠值非整數 | 檢查 `AGENTX_PORT` 的值 |

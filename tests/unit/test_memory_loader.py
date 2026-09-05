@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from kama_claude.core.memory.loader import load_context_file
+from agentx.core.memory.loader import load_context_file
 
 
 # 功能：驗證檔案存在時返回去除首尾空格的完整內容

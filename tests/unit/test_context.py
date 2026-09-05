@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from kama_claude.core.context import ExecutionContext
+from agentx.core.context import ExecutionContext
 
 
 # 功能：驗證 ExecutionContext 初始化時將 goal 包裝為第一條 user 訊息

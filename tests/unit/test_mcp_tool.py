@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kama_claude.core.mcp.client import McpClient, McpServerUnavailableError, McpToolDef
-from kama_claude.core.mcp.tool import McpTool
+from agentx.core.mcp.client import McpClient, McpServerUnavailableError, McpToolDef
+from agentx.core.mcp.tool import McpTool
 
 
 def _make_tool(

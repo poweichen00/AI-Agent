@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from kama_claude.core.skills.loader import Skill, SkillLoader
+from agentx.core.skills.loader import Skill, SkillLoader
 
 
 # 功能：內建 review skill 應能被 SkillLoader 查詢到
@@ -53,7 +53,7 @@ def test_arguments_substituted() -> None:
 # 功能：frontmatter 中的 allowed_tools 列表應被正確解析
 # 設計：構造含 allowed_tools 的 Markdown 檔案，透過 _parse_skill_file 解析並驗證結果
 def test_frontmatter_parsed(tmp_path: Path) -> None:
-    from kama_claude.core.skills.loader import _parse_skill_file
+    from agentx.core.skills.loader import _parse_skill_file
 
     content = """\
 ---
@@ -78,7 +78,7 @@ allowed_tools:
 # 功能：無 frontmatter 的 Markdown 檔案仍可載入，allowed_tools 為空列表
 # 設計：寫入純正文 Markdown，斷言解析成功且 allowed_tools=[]
 def test_no_frontmatter(tmp_path: Path) -> None:
-    from kama_claude.core.skills.loader import _parse_skill_file
+    from agentx.core.skills.loader import _parse_skill_file
 
     content = "你是助手，請幫助使用者完成任務：$ARGUMENTS\n"
     p = tmp_path / "plain.md"
@@ -90,9 +90,9 @@ def test_no_frontmatter(tmp_path: Path) -> None:
 
 
 # 功能：專案本地 skill 應覆蓋內建同名 skill
-# 設計：在 .kama/skills/ 中寫入同名檔案，用 monkeypatch 修改 cwd，斷言載入到的是本地版本
+# 設計：在 .agentx/skills/ 中寫入同名檔案，用 monkeypatch 修改 cwd，斷言載入到的是本地版本
 def test_project_overrides_global(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    local_skills = tmp_path / ".kama" / "skills"
+    local_skills = tmp_path / ".agentx" / "skills"
     local_skills.mkdir(parents=True)
     (local_skills / "review.md").write_text(
         "---\nname: review\ndescription: local override\n---\nlocal system prompt $ARGUMENTS\n",

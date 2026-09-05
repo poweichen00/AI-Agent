@@ -3,7 +3,7 @@
 端到端許可權審批流程診斷指令碼
 
 模擬 TUI 的完整鏈路：
-  1. 連線 kama-core，訂閱事件
+  1. 連線 agentx-core，訂閱事件
   2. 建立 session，發訊息觸發 bash 工具（bash 總是需要審批）
   3. 收到 permission.requested → 自動回覆 allow_once
   4. 等待 run.finished，列印全部事件日誌
