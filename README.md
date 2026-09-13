@@ -37,22 +37,6 @@ AgentX 將真正執行任務的能力放進常駐的 `agentx-core`，CLI 與 TUI
 
 ---
 
-## 👤 我的角色
-
-> 個人 AI Agent 系統專案
-
-我負責將原始教學架構整理為獨立的 AgentX 專案，完成品牌與套件命名統一、繁體中文在地化、TUI 中文輸入修正、文件重構與測試環境整理。
-
-主要工作範圍：
-
-- **核心執行環境**：AgentRunner、AgentLoop、LLM Provider 與 ToolRegistry。
-- **程式間通訊**：TCP、JSON-RPC 2.0、NDJSON 與事件廣播。
-- **互動介面**：Textual TUI、串流輸出、權限選擇與中文輸入。
-- **可靠性機制**：Session、JSONL 記錄、Trace、重連、Replay 與 Compact。
-- **擴充能力**：Skills、Subagents、角色工具邊界與 MCP。
-
----
-
 ## 💡 解決的問題
 
 - **任務不中斷**：TUI 關閉或重新連線時，Core 中的任務仍可持續執行。
