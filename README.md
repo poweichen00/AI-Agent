@@ -1,22 +1,22 @@
 <div align="center">
 
-# 🤖 AgentX
+# AgentX
 
 **一套可觀察、可治理、可擴充的本地 AI Agent 執行環境。**
 
 以 Python 實作完整 ReAct 迴圈，透過常駐 Core、CLI 與 TUI 串接工具呼叫、權限審批、事件流、長期會話、上下文壓縮、Skills、Subagents 與 MCP。
 
-![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB)
 ![Textual](https://img.shields.io/badge/TUI-Textual-FFCC00)
 ![Anthropic](https://img.shields.io/badge/LLM-Anthropic-D97757)
-![Tests](https://img.shields.io/badge/Tests-pytest-0A9EDC?logo=pytest&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-pytest-0A9EDC)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 </div>
 
 ---
 
-## 📖 專案介紹
+## 專案介紹
 
 一般 AI Demo 通常把「接收輸入、呼叫模型、顯示答案」全部塞在同一個程式裡，難以處理長時間任務、多個客戶端、權限審批與中斷恢復。
 
@@ -37,7 +37,7 @@ AgentX 將真正執行任務的能力放進常駐的 `agentx-core`，CLI 與 TUI
 
 ---
 
-## 💡 解決的問題
+## 解決的問題
 
 - **任務不中斷**：TUI 關閉或重新連線時，Core 中的任務仍可持續執行。
 - **過程可追蹤**：不只顯示最後答案，也儲存每個 Run 的事件與完整 Trace。
@@ -48,7 +48,7 @@ AgentX 將真正執行任務的能力放進常駐的 `agentx-core`，CLI 與 TUI
 
 ---
 
-## 🛠 技術棧
+## 技術棧
 
 | 元件 | 技術 | 用途 |
 | --- | --- | --- |
@@ -63,54 +63,45 @@ AgentX 將真正執行任務的能力放進常駐的 `agentx-core`，CLI 與 TUI
 
 ---
 
-## 🏗 系統架構
-
-```text
-                    ┌──────────────────────┐
-                    │   agentx-core daemon │
-                    │   127.0.0.1:7437     │
-                    └──────────┬───────────┘
-                               │
-                 JSON-RPC 2.0 + NDJSON / TCP
-                               │
-                    ┌──────────┴──────────┐
-                    │                     │
-               agentx CLI           agentx-tui
-                                          │
-使用者目標                                │ 即時事件
-    ↓                                     │
-SessionManager → AgentRunner → AgentLoop  │
-                              ├─ LLM Provider
-                              ├─ ToolRegistry ── MCP Tools
-                              ├─ PermissionManager
-                              └─ EventBus ───────┬─ TUI
-                                                ├─ events.jsonl
-                                                └─ TraceWriter
-```
+## 系統架構
 
 一次任務的主要流程：
 
-```text
-CLI / TUI 接收指令
-↓
-讀取設定並連接 Core
-↓
-透過 TCP 傳送 JSON-RPC / NDJSON
-↓
-Core 驗證 Request
-↓
-method 路由到 Handler
-↓
-AgentLoop 呼叫模型與工具
-↓
-EventBus 廣播並保存事件
-↓
-CLI / TUI 驗證 Response 並顯示結果
+```mermaid
+flowchart TD
+    User[使用者目標] --> Client{選擇客戶端}
+    Client --> CLI[agentx CLI]
+    Client --> TUI[agentx-tui]
+
+    CLI -->|JSON-RPC 2.0 與 NDJSON / TCP| Core[agentx-core daemon<br/>127.0.0.1:7437]
+    TUI -->|JSON-RPC 2.0 與 NDJSON / TCP| Core
+
+    Core --> Validate[驗證 Request]
+    Validate --> Handler[method 路由至 Handler]
+    Handler --> Session[SessionManager]
+    Session --> Runner[AgentRunner]
+    Runner --> Loop[AgentLoop]
+
+    Loop --> LLM[LLM Provider]
+    Loop --> Registry[ToolRegistry]
+    Registry --> Builtin[內建工具]
+    Registry --> MCP[MCP Tools]
+    Loop --> Permission[PermissionManager]
+    Loop --> Bus[EventBus]
+
+    Permission -->|permission.requested| Bus
+    Bus -->|即時事件| TUI
+    Bus --> Events[events.jsonl]
+    Bus --> Trace[TraceWriter]
+
+    Core -->|Response| CLI
+    Core -->|Response| TUI
+    TUI -->|permission.respond| Core
 ```
 
 ---
 
-## 📂 專案結構
+## 專案結構
 
 ```text
 AI-Agent/
@@ -142,7 +133,7 @@ AI-Agent/
 
 ---
 
-## 🚀 快速開始
+## 快速開始
 
 ### 1. 安裝環境
 
@@ -183,7 +174,7 @@ uv run agentx run --goal "用一句話介紹你自己"
 
 ---
 
-## 💻 使用方式
+## 使用方式
 
 ```bash
 # 確認 Core 是否可連線
@@ -236,7 +227,7 @@ reviewer 審查
 
 ---
 
-## 🧪 品質檢查
+## 品質檢查
 
 ```bash
 # 單元測試
@@ -262,7 +253,7 @@ make lint
 
 ---
 
-## 💾 執行資料
+## 執行資料
 
 AgentX 預設將本機狀態儲存於：
 
@@ -284,7 +275,7 @@ AgentX 預設將本機狀態儲存於：
 
 ---
 
-## 🔌 MCP 設定範例
+## MCP 設定範例
 
 在 `~/.agentx/config.toml` 加入：
 
@@ -300,12 +291,12 @@ args = ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
 
 ---
 
-## 📫 聯絡方式
+## 聯絡方式
 
 **poweichen00** — [GitHub](https://github.com/poweichen00) · [專案原始碼](https://github.com/poweichen00/AI-Agent)
 
 ---
 
-## 📄 授權
+## 授權
 
 Copyright © 2026 [poweichen00](https://github.com/poweichen00)。本專案使用 [MIT License](LICENSE)。
