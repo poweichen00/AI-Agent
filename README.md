@@ -63,41 +63,14 @@ AgentX 將真正執行任務的能力放進常駐的 `agentx-core`，CLI 與 TUI
 
 ---
 
-## 系統架構
+## 運作方式
 
-一次任務的主要流程：
-
-```mermaid
-flowchart TD
-    User[使用者目標] --> Client{選擇客戶端}
-    Client --> CLI[agentx CLI]
-    Client --> TUI[agentx-tui]
-
-    CLI -->|JSON-RPC 2.0 與 NDJSON / TCP| Core[agentx-core daemon]
-    TUI -->|JSON-RPC 2.0 與 NDJSON / TCP| Core
-
-    Core --> Validate[驗證 Request]
-    Validate --> Handler[method 路由至 Handler]
-    Handler --> Session[SessionManager]
-    Session --> Runner[AgentRunner]
-    Runner --> Loop[AgentLoop]
-
-    Loop --> LLM[LLM Provider]
-    Loop --> Registry[ToolRegistry]
-    Registry --> Builtin[內建工具]
-    Registry --> MCP[MCP Tools]
-    Loop --> Permission[PermissionManager]
-    Loop --> Bus[EventBus]
-
-    Permission -->|permission.requested| Bus
-    Bus -->|即時事件| TUI
-    Bus --> Events[events.jsonl]
-    Bus --> Trace[TraceWriter]
-
-    Core -->|Response| CLI
-    Core -->|Response| TUI
-    TUI -->|permission.respond| Core
-```
+1. CLI 或 TUI 將使用者指令透過 TCP 傳送給常駐的 `agentx-core`。
+2. Core 驗證 JSON-RPC Request，並將 method 交給對應 Handler。
+3. `SessionManager` 建立或延續會話，再由 `AgentRunner` 啟動任務。
+4. `AgentLoop` 持續呼叫 LLM、執行內建工具或 MCP 工具，直到任務完成。
+5. 具有副作用的工具先通過 `PermissionManager`，必要時等待使用者審批。
+6. `EventBus` 將即時事件推送到 TUI，並同步寫入 `events.jsonl` 與 Trace。
 
 ---
 
