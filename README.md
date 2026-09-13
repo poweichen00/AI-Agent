@@ -73,7 +73,7 @@ flowchart TD
     Client --> CLI[agentx CLI]
     Client --> TUI[agentx-tui]
 
-    CLI -->|JSON-RPC 2.0 與 NDJSON / TCP| Core[agentx-core daemon<br/>127.0.0.1:7437]
+    CLI -->|JSON-RPC 2.0 與 NDJSON / TCP| Core[agentx-core daemon]
     TUI -->|JSON-RPC 2.0 與 NDJSON / TCP| Core
 
     Core --> Validate[驗證 Request]
