@@ -2,115 +2,31 @@
 
 # AgentX
 
-**一套可觀察、可治理、可擴充的本地 AI Agent 執行環境。**
+**本機執行的 AI Agent Runtime，讓長時間任務可觀察、可審批、可恢復。**
 
-以 Python 實作完整 ReAct 迴圈，透過常駐 Core、CLI 與 TUI 串接工具呼叫、權限審批、事件流、長期會話、上下文壓縮、Skills、Subagents 與 MCP。
+AgentX 以常駐 Core 執行 ReAct Agent，並透過 CLI 或 TUI 操作同一份會話與即時事件流。
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB)
-![Textual](https://img.shields.io/badge/TUI-Textual-FFCC00)
-![Anthropic](https://img.shields.io/badge/LLM-Anthropic-D97757)
-![Tests](https://img.shields.io/badge/Tests-pytest-0A9EDC)
+![TUI](https://img.shields.io/badge/TUI-Textual-FFCC00)
+![LLM](https://img.shields.io/badge/LLM-Anthropic-D97757)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 </div>
 
----
+AgentX 將任務執行與操作介面分離：`agentx-core` 負責會話、模型呼叫、工具執行與事件保存；CLI 和 TUI 則作為客戶端連線到 Core。即使介面中途關閉，任務仍可繼續執行，重新連線後也能回放先前事件。
 
-## 專案介紹
-
-一般 AI Demo 通常把「接收輸入、呼叫模型、顯示答案」全部塞在同一個程式裡，難以處理長時間任務、多個客戶端、權限審批與中斷恢復。
-
-AgentX 將真正執行任務的能力放進常駐的 `agentx-core`，CLI 與 TUI 都只是透過 TCP IPC 連線的客戶端。模型每一步的推理、工具呼叫、權限決策與 token 使用量都會成為事件，因此能即時顯示、寫入 JSONL，並在斷線後重新播放。
-
-### 核心功能
-
-- **ReAct Agent Loop**：支援模型思考、工具呼叫、結果回填與多步任務執行。
-- **Daemon + 多客戶端**：Core 持續執行，CLI 與 TUI 可同時訂閱同一份事件流。
-- **型別化 IPC**：使用 JSON-RPC 2.0 + NDJSON，命令回應與事件推送共用 TCP 連線。
-- **即時 TUI**：顯示串流 token、工具呼叫、執行狀態、權限審批與上下文水位。
-- **工具安全**：先驗證參數，再依策略允許、拒絕或交由使用者決定。
-- **可恢復會話**：儲存 thread、notes、run events 與 trace，支援斷線重連和事件重播。
-- **上下文治理**：三層 Context、工具結果截斷、手動與自動 Compact。
-- **多 Agent 協作**：以 planner、executor、reviewer 子 Agent 拆分複雜任務。
-- **Skills 工作流程**：用 `/review`、`/orchestrate` 等斜線命令套用固定流程與工具白名單。
-- **MCP 工具擴充**：將外部 MCP Server 工具接入既有 ToolRegistry、權限與事件鏈路。
-
----
-
-## 解決的問題
-
-- **任務不中斷**：TUI 關閉或重新連線時，Core 中的任務仍可持續執行。
-- **過程可追蹤**：不只顯示最後答案，也儲存每個 Run 的事件與完整 Trace。
-- **工具可治理**：修改檔案或執行命令前必須通過權限檢查，避免模型直接進行危險操作。
-- **長會話可續航**：系統會顯示 Context 水位，並可將歷史壓縮成可接續的交接摘要。
-- **複雜任務可分工**：父 Agent 負責協調，子 Agent 依角色進行規劃、執行與審查。
-- **外部能力可插拔**：MCP 工具可直接加入既有執行鏈路，不必修改 AgentLoop。
-
----
-
-## 技術棧
-
-| 元件 | 技術 | 用途 |
-| --- | --- | --- |
-| 執行環境 | Python 3.12、asyncio | 非同步 Daemon、Socket 與並行任務 |
-| LLM | Anthropic SDK | 串流文字、Thinking Block 與 Tool Use |
-| 資料模型 | Pydantic v2 | 驗證 JSON-RPC 命令、事件與工具參數 |
-| 終端介面 | Textual、Rich | TUI 版面、Markdown 與即時事件顯示 |
-| 通訊協議 | TCP、JSON-RPC 2.0、NDJSON | CLI、TUI 與 Core 間的雙向通訊 |
-| 工具擴充 | MCP | 接入外部工具伺服器 |
-| 品質工具 | pytest、Ruff、mypy | 測試、格式與嚴格型別檢查 |
-| 套件管理 | uv、Hatchling | 環境同步、執行與套件建置 |
-
----
-
-## 運作方式
-
-1. CLI 或 TUI 將使用者指令透過 TCP 傳送給常駐的 `agentx-core`。
-2. Core 驗證 JSON-RPC Request，並將 method 交給對應 Handler。
-3. `SessionManager` 建立或延續會話，再由 `AgentRunner` 啟動任務。
-4. `AgentLoop` 持續呼叫 LLM、執行內建工具或 MCP 工具，直到任務完成。
-5. 執行可能修改系統狀態的工具前，`PermissionManager` 會先檢查權限；需要確認時，再由使用者決定是否允許。
-6. `EventBus` 將即時事件推送到 TUI，並同步寫入 `events.jsonl` 與 Trace。
-
----
-
-## 專案結構
-
-```text
-AI-Agent/
-├── src/agentx/
-│   ├── cli/                    # CLI 指令與輸出
-│   ├── tui/                    # Textual 終端介面
-│   └── core/
-│       ├── agents/             # planner / executor / reviewer 設定
-│       ├── bus/                # JSON-RPC 命令、事件與 envelope
-│       ├── compact/            # 上下文壓縮
-│       ├── events/             # EventBus 與 JSONL Writer
-│       ├── llm/                # Anthropic Provider 與串流回應
-│       ├── mcp/                # MCP Client、Manager 與工具包裝
-│       ├── permissions/        # 權限策略、審批與持久化
-│       ├── session/            # 會話、Thread、Notes 與 Run
-│       ├── skills/             # 斜線命令工作流程
-│       ├── subagent/           # 子 Agent 與背景任務
-│       ├── tools/              # 內建工具與 ToolRegistry
-│       └── transport/          # TCP Socket Client / Server
-├── tests/
-│   ├── unit/                   # 單元測試
-│   └── integration/            # 真實程式間通訊測試
-├── scripts/                    # 協議文件產生器
-├── WIRE_PROTOCOL.md            # 自動產生的 IPC 協議文件
-├── RUNBOOK.md                  # 維運與故障排除
-├── pyproject.toml
-└── Makefile
-```
-
----
+> [!WARNING]
+> AgentX 可以執行終端指令與修改檔案。建議先在測試專案中使用、仔細確認權限提示，並避免直接在含有敏感資料的目錄執行。
 
 ## 快速開始
 
-### 1. 安裝環境
+### 環境需求
 
-需要 Python 3.12 與 [uv](https://docs.astral.sh/uv/)。
+- Python 3.12
+- [uv](https://docs.astral.sh/uv/)
+- Anthropic API Key
+
+### 安裝
 
 ```bash
 git clone https://github.com/poweichen00/AI-Agent.git
@@ -119,13 +35,13 @@ uv sync
 cp .env.example .env
 ```
 
-在 `.env` 填入：
+在 `.env` 設定 API Key：
 
 ```bash
-ANTHROPIC_API_KEY=你的_API_Key
+ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-### 2. 啟動 AgentX
+### 啟動
 
 終端 A 啟動 Core：
 
@@ -139,118 +55,111 @@ uv run agentx-core
 uv run agentx-tui
 ```
 
-也可以用 CLI 觸發單次任務：
+進入 TUI 後直接輸入任務，例如：
+
+```text
+分析目前專案的測試覆蓋範圍，列出三個最需要補強的地方
+```
+
+若不使用 TUI，也可以從另一個終端執行單次任務：
 
 ```bash
 uv run agentx run --goal "用一句話介紹你自己"
 ```
 
----
+## 核心能力
+
+- **持久化 Runtime**：Agent 在常駐 Core 中執行，不依附單一 CLI 或 TUI 行程。
+- **即時事件流**：模型輸出、工具呼叫、權限決策與 token 用量都會即時顯示並寫入 JSONL。
+- **工具權限控管**：工具參數會先經過驗證，再依規則自動允許、拒絕，或等待使用者確認。
+- **可恢復會話**：保存對話、筆記、任務事件與 Trace，支援斷線重連和事件回放。
+- **上下文治理**：提供三層 Context、工具結果截斷，以及手動與自動壓縮機制。
+- **Skills 與多 Agent**：可透過斜線命令套用固定流程，並由 planner、executor、reviewer 分工。
+- **MCP 擴充**：外部 MCP 工具可接入既有的工具註冊、權限與事件處理流程。
 
 ## 使用方式
 
+| 指令 | 用途 |
+| --- | --- |
+| `uv run agentx-core` | 在前景啟動 Core |
+| `uv run agentx-tui` | 開啟互動式 TUI |
+| `uv run agentx ping` | 確認 Core 是否可連線 |
+| `uv run agentx run --goal "<任務>"` | 執行單次任務 |
+| `uv run agentx chat` | 開始多輪 CLI 對話 |
+| `uv run agentx core start` | 在背景啟動 Core |
+| `uv run agentx core status` | 查看 Core 狀態 |
+| `uv run agentx core stop` | 停止背景 Core |
+| `uv run agentx trace --follow` | 持續查看新的 Trace |
+| `uv run agentx-tui --replay <run_id>` | 回放指定任務事件 |
+
+Trace 也能依任務或層級篩選：
+
 ```bash
-# 確認 Core 是否可連線
-uv run agentx ping
-
-# 在背景啟動、查看或停止 Core
-uv run agentx core start
-uv run agentx core status
-uv run agentx core stop
-
-# 開始多輪 CLI 對話
-uv run agentx chat
-
-# 查看完整 Trace，或持續追蹤新事件
-uv run agentx trace
-uv run agentx trace --follow
-
-# 只查看指定 Run 或事件層
 uv run agentx trace <run_id>
+uv run agentx trace --layer ipc
 uv run agentx trace --layer event
+uv run agentx trace --layer llm
 ```
 
-### Skills 與 Subagents
+### Skills 與多 Agent
 
-在 TUI 輸入：
+在 TUI 內輸入 `/` 可觸發 Skill。以下範例會啟動程式碼審查流程：
 
 ```text
 /review src/agentx/core/loop.py
 ```
 
-測試多 Agent 工作流程：
+以下範例會讓多個子 Agent 分工分析：
 
 ```text
 /orchestrate 分析 src/agentx/core/runner.py 的重構風險，不要修改任何檔案
 ```
 
-預期事件流程：
+## 運作原理
 
-```text
-skill.invoked
-↓
-planner 規劃
-↓
-executor 執行
-↓
-reviewer 審查
-↓
-父 Agent 彙整結果
-```
+一次任務會經過以下流程：
 
----
+1. CLI 或 TUI 將使用者指令傳送給常駐的 `agentx-core`。
+2. Core 驗證 JSON-RPC Request，並依照 method 交給對應 Handler。
+3. `SessionManager` 建立或延續會話，再由 `AgentRunner` 啟動任務。
+4. `AgentLoop` 持續呼叫模型、執行內建工具或 MCP 工具，直到任務完成。
+5. 可能改變系統狀態的工具會先經過 `PermissionManager`；需要確認時，由使用者決定是否允許執行。
+6. `EventBus` 將事件即時推送給客戶端，同時寫入 `events.jsonl` 與 Trace。
 
-## 品質檢查
+CLI、TUI 與 Core 使用 TCP 傳輸 JSON-RPC 2.0 命令與 NDJSON 事件。完整訊息格式請參閱 [WIRE_PROTOCOL.md](WIRE_PROTOCOL.md)。
 
-```bash
-# 單元測試
-uv run pytest tests/unit -v
+## 設定
 
-# 全部測試
-uv run pytest
+設定值的優先順序由低到高為：程式預設值、`~/.agentx/config.toml`、專案內的 `.agentx/config.toml`、`.env`、目前行程的環境變數。
 
-# 程式風格與靜態型別
-uv run ruff check src tests scripts
-uv run mypy src
+常用環境變數：
 
-# 確認 IPC 文件與模型同步
-uv run python scripts/gen_protocol_doc.py --check
-```
+| 變數 | 用途 | 預設值 |
+| --- | --- | --- |
+| `ANTHROPIC_API_KEY` | Anthropic API Key | 無 |
+| `AGENTX_LLM_DEFAULT_MODEL` | 預設模型 | `claude-sonnet-4-6` |
+| `AGENTX_MAX_STEPS` | 單次任務最多步數 | `20` |
+| `AGENTX_LOG_LEVEL` | 日誌層級 | `INFO` |
+| `AGENTX_LOG_FORMAT` | 日誌格式：`text` 或 `json` | `text` |
+| `AGENTX_TRACE_ENABLED` | 是否寫入 Trace | `true` |
+| `AGENTX_PERMISSION_TIMEOUT_S` | 權限確認等待秒數 | `60` |
+| `AGENTX_COMPACT_THRESHOLD` | 自動壓縮門檻；`0` 代表停用 | `0` |
 
-也可以執行：
+若設定 `AGENTX_CONFIG`，AgentX 只會讀取指定的 TOML 設定檔，不再疊加全域與專案設定。
 
-```bash
-make test
-make lint
-```
+## 權限與安全
 
----
+工具執行前會依序經過參數驗證與權限判斷：
 
-## 執行資料
+- `ALLOW`：符合既有規則，直接執行。
+- `DENY`：不符合安全規則，拒絕執行。
+- `ASK`：暫停該次工具呼叫，等待使用者在 TUI 允許或拒絕。
 
-AgentX 預設將本機狀態儲存於：
+使用者可選擇只套用一次，也可以將決定保存到 `~/.agentx/policy.toml`。權限管理能降低誤操作風險，但不能取代隔離環境、版本控制與敏感資料管理。
 
-```text
-~/.agentx/
-├── config.toml                 # 全域設定
-├── context.md                  # 全域 Context
-├── policy.toml                 # 持久化權限決策
-├── logs/core.log               # Core 日誌
-├── traces/daemon.jsonl         # 系統 Trace
-└── sessions/<session_id>/
-    ├── thread.jsonl            # 對話歷史
-    ├── notes.md                # Session 備註
-    ├── summary_*.md            # Compact 摘要
-    └── runs/<run_id>/events.jsonl
-```
+## MCP 工具
 
-`.env`、API Key 與 `~/.agentx/` 都不會提交至 Git。
-
----
-
-## MCP 設定範例
-
-在 `~/.agentx/config.toml` 加入：
+在 `~/.agentx/config.toml` 加入 MCP Server，例如：
 
 ```toml
 [[mcp.servers]]
@@ -260,15 +169,80 @@ command = "npx"
 args = ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
 ```
 
-重新啟動 Core 後，外部工具會以 `filesystem__工具名稱` 的形式註冊，並沿用 AgentX 的工具白名單、權限審批、錯誤分類與事件顯示。
+重新啟動 Core 後，工具會以 `filesystem__工具名稱` 的形式註冊，並沿用 AgentX 的工具白名單、權限判斷與事件紀錄。此範例需要本機已安裝 Node.js 與 `npx`。
 
----
+## 執行資料
 
-## 聯絡方式
+AgentX 預設將本機狀態存放在 `~/.agentx/`：
 
-**poweichen00** — [GitHub](https://github.com/poweichen00) · [專案原始碼](https://github.com/poweichen00/AI-Agent)
+| 路徑 | 內容 |
+| --- | --- |
+| `config.toml` | 全域設定 |
+| `context.md` | 全域 Context |
+| `policy.toml` | 已保存的權限決定 |
+| `logs/core.log` | Core 日誌 |
+| `traces/daemon.jsonl` | 系統 Trace |
+| `sessions/<session_id>/thread.jsonl` | 對話歷史 |
+| `sessions/<session_id>/notes.md` | 會話筆記 |
+| `sessions/<session_id>/summary_*.md` | Context 壓縮摘要 |
+| `sessions/<session_id>/runs/<run_id>/events.jsonl` | 單次任務事件 |
 
----
+`.env`、API Key 與 `~/.agentx/` 不會提交到 Git。
+
+## 開發與驗證
+
+```bash
+# 單元測試
+make test
+
+# Ruff 與 mypy
+make lint
+
+# 整合測試
+make integration-test
+
+# 確認 IPC 文件與資料模型同步
+uv run python scripts/gen_protocol_doc.py --check
+```
+
+執行全部測試：
+
+```bash
+uv run pytest
+```
+
+## 專案結構
+
+```text
+AI-Agent/
+├── src/agentx/
+│   ├── cli/                    # CLI 指令與輸出
+│   ├── tui/                    # Textual 終端介面
+│   └── core/
+│       ├── agents/             # 子 Agent 角色設定
+│       ├── bus/                # 命令與事件模型
+│       ├── compact/            # 上下文壓縮
+│       ├── events/             # EventBus 與 JSONL 寫入
+│       ├── llm/                # 模型 Provider
+│       ├── mcp/                # MCP Client 與工具包裝
+│       ├── permissions/        # 權限規則與審批
+│       ├── session/            # 會話、筆記與任務資料
+│       ├── skills/             # 斜線命令工作流程
+│       ├── subagent/           # 子 Agent 與背景任務
+│       ├── tools/              # 內建工具與 ToolRegistry
+│       └── transport/          # Socket Client 與 Server
+├── tests/                      # 單元與整合測試
+├── scripts/                    # 開發與文件工具
+├── RUNBOOK.md                  # 維運與故障排除
+├── WIRE_PROTOCOL.md            # IPC 協議文件
+├── pyproject.toml
+└── Makefile
+```
+
+## 延伸文件
+
+- [WIRE_PROTOCOL.md](WIRE_PROTOCOL.md)：IPC 命令、回應與事件格式。
+- [RUNBOOK.md](RUNBOOK.md)：日誌、診斷與常見故障處理。
 
 ## 授權
 
