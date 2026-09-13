@@ -50,7 +50,16 @@ AgentX 將真正執行任務的能力放進常駐的 `agentx-core`，CLI 與 TUI
 
 ## 🛠 技術棧
 
-**Python 3.12** · **asyncio** · **Anthropic SDK** · **Pydantic v2** · **Textual** · **Rich** · **JSON-RPC 2.0** · **NDJSON** · **MCP** · **pytest** · **Ruff** · **mypy** · **uv**
+| 元件 | 技術 | 用途 |
+| --- | --- | --- |
+| 執行環境 | Python 3.12、asyncio | 非同步 Daemon、Socket 與並行任務 |
+| LLM | Anthropic SDK | 串流文字、Thinking Block 與 Tool Use |
+| 資料模型 | Pydantic v2 | 驗證 JSON-RPC 命令、事件與工具參數 |
+| 終端介面 | Textual、Rich | TUI 版面、Markdown 與即時事件顯示 |
+| 通訊協議 | TCP、JSON-RPC 2.0、NDJSON | CLI、TUI 與 Core 間的雙向通訊 |
+| 工具擴充 | MCP | 接入外部工具伺服器 |
+| 品質工具 | pytest、Ruff、mypy | 測試、格式與嚴格型別檢查 |
+| 套件管理 | uv、Hatchling | 環境同步、執行與套件建置 |
 
 ---
 
@@ -172,7 +181,32 @@ uv run agentx-tui
 uv run agentx run --goal "用一句話介紹你自己"
 ```
 
-### 3. 驗證 Skills 與 Subagents
+---
+
+## 💻 使用方式
+
+```bash
+# 確認 Core 是否可連線
+uv run agentx ping
+
+# 在背景啟動、查看或停止 Core
+uv run agentx core start
+uv run agentx core status
+uv run agentx core stop
+
+# 開始多輪 CLI 對話
+uv run agentx chat
+
+# 查看完整 Trace，或持續追蹤新事件
+uv run agentx trace
+uv run agentx trace --follow
+
+# 只查看指定 Run 或事件層
+uv run agentx trace <run_id>
+uv run agentx trace --layer event
+```
+
+### Skills 與 Subagents
 
 在 TUI 輸入：
 
@@ -184,6 +218,20 @@ uv run agentx run --goal "用一句話介紹你自己"
 
 ```text
 /orchestrate 分析 src/agentx/core/runner.py 的重構風險，不要修改任何檔案
+```
+
+預期事件流程：
+
+```text
+skill.invoked
+↓
+planner 規劃
+↓
+executor 執行
+↓
+reviewer 審查
+↓
+父 Agent 彙整結果
 ```
 
 ---
