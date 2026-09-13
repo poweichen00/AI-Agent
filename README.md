@@ -308,4 +308,4 @@ args = ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
 
 ## 📄 授權
 
-本專案使用 [MIT License](LICENSE)。衍生與修改內容仍保留原始專案的授權聲明。
+Copyright © 2026 [poweichen00](https://github.com/poweichen00)。本專案使用 [MIT License](LICENSE)。
