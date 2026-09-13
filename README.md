@@ -29,8 +29,8 @@ AgentX 將任務執行與操作介面分離：`agentx-core` 負責會話、模�
 ### 安裝
 
 ```bash
-git clone https://github.com/poweichen00/AI-Agent.git
-cd AI-Agent
+git clone https://github.com/poweichen00/AgentX.git
+cd AgentX
 uv sync
 cp .env.example .env
 ```
@@ -214,7 +214,7 @@ uv run pytest
 ## 專案結構
 
 ```text
-AI-Agent/
+AgentX/
 ├── src/agentx/
 │   ├── cli/                    # CLI 指令與輸出
 │   ├── tui/                    # Textual 終端介面
