@@ -7,6 +7,7 @@ Run explicitly:
 Or with the marker:
     uv run pytest -m integration -v
 """
+
 from __future__ import annotations
 
 import json
@@ -66,9 +67,7 @@ async def test_run_e2e_reads_file_and_succeeds(
     assert len(jsonl_files) == 1, "expected exactly one events.jsonl"
 
     events = [
-        json.loads(line)
-        for line in jsonl_files[0].read_text(encoding="utf-8").splitlines()
-        if line
+        json.loads(line) for line in jsonl_files[0].read_text(encoding="utf-8").splitlines() if line
     ]
     types = [e["type"] for e in events]
 

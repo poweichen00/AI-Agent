@@ -58,6 +58,7 @@ class PermissionManager:
     # 對工具名 + 引數執行 4 層靜態評估，不掛起
     def evaluate(self, tool_name: str, params: dict[str, Any]) -> PermissionDecision:
         from agentx.core.permissions.policy import evaluate
+
         policy = self._policies.get(tool_name)
         return evaluate(tool_name, params, policy)
 
@@ -94,7 +95,9 @@ class PermissionManager:
             # Tier 4: persistent always（跨 session）
             if tool_name in self._persistent_always:
                 cached = self._persistent_always[tool_name]
-                logger.debug("permission: persistent cache hit tool=%s decision=%s", tool_name, cached)
+                logger.debug(
+                    "permission: persistent cache hit tool=%s decision=%s", tool_name, cached
+                )
                 return cached == "allow", f"auto_{cached}"
 
             # Tier 5: allow_patterns（bash only）
@@ -137,7 +140,7 @@ class PermissionManager:
                 raw = await asyncio.wait_for(future, timeout=self._timeout_s)
             else:
                 raw = await future
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._pending.pop(tool_use_id, None)
             logger.info("permission: timeout tool_use_id=%s tool=%s", tool_use_id, tool_name)
             return False, "timeout"
@@ -162,14 +165,18 @@ class PermissionManager:
             self._persistent_always[tool_name] = "allow"
             logger.info(
                 "permission: always allow tool=%s policy_file=%s persistent=%s",
-                tool_name, self._policy_file, self._persistent_always,
+                tool_name,
+                self._policy_file,
+                self._persistent_always,
             )
             if self._policy_file is not None:
                 try:
                     save_policy_file(self._persistent_always, self._policy_file)
                     logger.info("permission: policy.toml written path=%s", self._policy_file)
                 except Exception:
-                    logger.exception("permission: failed to write policy.toml path=%s", self._policy_file)
+                    logger.exception(
+                        "permission: failed to write policy.toml path=%s", self._policy_file
+                    )
             else:
                 logger.warning("permission: policy_file is None, skipping persistence")
         elif decision == "always_deny":
@@ -177,28 +184,27 @@ class PermissionManager:
             self._persistent_always[tool_name] = "deny"
             logger.info(
                 "permission: always deny tool=%s policy_file=%s persistent=%s",
-                tool_name, self._policy_file, self._persistent_always,
+                tool_name,
+                self._policy_file,
+                self._persistent_always,
             )
             if self._policy_file is not None:
                 try:
                     save_policy_file(self._persistent_always, self._policy_file)
                     logger.info("permission: policy.toml written path=%s", self._policy_file)
                 except Exception:
-                    logger.exception("permission: failed to write policy.toml path=%s", self._policy_file)
+                    logger.exception(
+                        "permission: failed to write policy.toml path=%s", self._policy_file
+                    )
             else:
                 logger.warning("permission: policy_file is None, skipping persistence")
         return allow
 
     # 客戶端斷連時拒絕該 session 所有待審批請求，防止 Future 永久掛起
     def cancel_session(self, session_id: str, reason: str = "client_disconnected") -> None:
-        to_cancel = [
-            uid for uid, req in self._pending.items()
-            if req.session_id == session_id
-        ]
+        to_cancel = [uid for uid, req in self._pending.items() if req.session_id == session_id]
         for uid in to_cancel:
             req = self._pending.pop(uid)
             if not req.future.done():
-                logger.debug(
-                    "permission: cancel pending tool_use_id=%s reason=%s", uid, reason
-                )
+                logger.debug("permission: cancel pending tool_use_id=%s reason=%s", uid, reason)
                 req.future.set_result("deny_once")

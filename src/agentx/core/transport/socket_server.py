@@ -41,6 +41,7 @@ def _now() -> str:
 def get_connection_writer() -> asyncio.StreamWriter:
     return _writer_var.get()
 
+
 _MAX_LINE_BYTES = 64 * 1024 * 1024  # 64 MB per frame，相容 MCP 大檔案工具結果
 
 

@@ -10,6 +10,7 @@ from agentx.core.permissions.policy import (
 
 # ── Tier 1: deny_patterns ────────────────────────────────────────────────────
 
+
 # 功能：驗證 deny_patterns 命中時直接返回 DENY，不繼續檢查後續層
 # 設計：配置 deny 模式 "rm\s+-rf"，傳入匹配命令；DENY 在最高優先順序，阻止危險命令
 def test_deny_pattern_wins() -> None:
@@ -34,6 +35,7 @@ def test_deny_pattern_no_match_falls_through() -> None:
 
 
 # ── Tier 2: OUTSIDE_CWD_HEURISTICS ───────────────────────────────────────────
+
 
 # 功能：驗證絕對路徑命令觸發 OUTSIDE_CWD 強制 ASK，即使 allow_patterns 也包含它
 # 設計：核心安全約束——allow_patterns 在第 3 層，OUTSIDE_CWD 在第 2 層，越界命令不可被靜默放行
@@ -100,6 +102,7 @@ def test_deny_wins_over_outside_cwd() -> None:
 
 # ── Tier 3: allow_patterns ───────────────────────────────────────────────────
 
+
 # 功能：驗證 allow_patterns 命中時返回 ALLOW（在 OUTSIDE_CWD 未命中的前提下）
 # 設計：echo 是安全的本地命令，配置 allow_patterns 後不需要使用者審批
 def test_allow_pattern_grants_access() -> None:
@@ -112,6 +115,7 @@ def test_allow_pattern_grants_access() -> None:
 
 
 # ── Tier 4: tool defaults ─────────────────────────────────────────────────────
+
 
 # 功能：驗證 bash 工具預設策略是 ASK
 # 設計：無任何 patterns 命中時，bash 必須詢問使用者，這是安全底線
@@ -142,6 +146,7 @@ def test_unknown_tool_default_is_ask() -> None:
 
 # ── non-bash tools ─────────────────────────────────────────────────────────────
 
+
 # 功能：驗證非 bash 工具的 patterns 不參與評估（patterns 僅對 bash 生效）
 # 設計：write_file 有 deny_patterns 欄位但工具不是 bash，應走 default (ASK)
 def test_patterns_only_apply_to_bash() -> None:
@@ -156,6 +161,7 @@ def test_patterns_only_apply_to_bash() -> None:
 
 
 # ── param_preview ─────────────────────────────────────────────────────────────
+
 
 # 功能：驗證 param_preview 對已知工具返回 key='value' 格式的摘要
 # 設計：TUI 審批卡片依賴這個摘要讓使用者快速理解工具要做什麼，格式必須穩定

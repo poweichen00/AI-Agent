@@ -27,7 +27,8 @@ class McpServerManager:
                 self._clients[cfg.name] = client
                 log.info(
                     "mcp: server '%s' connected, %d tool(s) discovered",
-                    cfg.name, len(tool_defs),
+                    cfg.name,
+                    len(tool_defs),
                 )
             except Exception:
                 log.exception("mcp: server '%s' failed to start, skipping", cfg.name)

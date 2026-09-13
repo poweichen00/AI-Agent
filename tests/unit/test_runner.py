@@ -123,7 +123,8 @@ async def test_run_started_event_published(tmp_path: Path) -> None:
 async def test_run_finished_event_published_on_success(tmp_path: Path) -> None:
     events = await _run(tmp_path=tmp_path)
     finished = next(
-        (e for e in events if e.type == "run.finished"), None  # type: ignore[attr-defined]
+        (e for e in events if e.type == "run.finished"),
+        None,  # type: ignore[attr-defined]
     )
     assert finished is not None
     assert finished.status == "success"  # type: ignore[attr-defined]

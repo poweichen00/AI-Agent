@@ -139,7 +139,7 @@ All commands are sent as JSON-RPC 2.0 requests. The `type` field inside `params`
   "id": "u-2",
   "method": "agent.run",
   "params": {
-    "goal": "\u603b\u7ed3 README.md \u7684\u4e3b\u8981\u7ae0\u8282"
+    "goal": "\u7e3d\u7d50 README.md \u7684\u4e3b\u8981\u7ae0\u7bc0"
   }
 }
 ```
@@ -431,7 +431,7 @@ All commands are sent as JSON-RPC 2.0 requests. The `type` field inside `params`
   "method": "session.send_message",
   "params": {
     "session_id": "sess-abc123def456",
-    "content": "\u603b\u7ed3 README.md"
+    "content": "\u7e3d\u7d50 README.md"
   }
 }
 ```
@@ -719,7 +719,7 @@ Events written to `runs/<run_id>/events.jsonl` and forwarded over IPC to subscri
 {
   "type": "run.started",
   "run_id": "20260516-100000-abc123",
-  "goal": "\u603b\u7ed3 README.md",
+  "goal": "\u7e3d\u7d50 README.md",
   "ts": "2026-05-16T10:00:00.001Z"
 }
 ```
@@ -1486,7 +1486,7 @@ Events written to `runs/<run_id>/events.jsonl` and forwarded over IPC to subscri
 {
   "type": "session.message_received",
   "session_id": "sess-abc123def456",
-  "content": "\u603b\u7ed3 README.md",
+  "content": "\u7e3d\u7d50 README.md",
   "ts": "2026-05-16T10:00:00.001Z"
 }
 ```

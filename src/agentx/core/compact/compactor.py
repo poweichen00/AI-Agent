@@ -96,8 +96,10 @@ class Compactor:
         )
         logger.info(
             "context compacted session=%s run=%s original≈%d summary=%d tokens",
-            self._session_id, context.run_id,
-            result.original_token_estimate, result.summary_tokens,
+            self._session_id,
+            context.run_id,
+            result.original_token_estimate,
+            result.summary_tokens,
         )
         return result
 
@@ -110,9 +112,9 @@ class Compactor:
     ) -> CompactionResult | None:
         from agentx.core.events.bus import EventBus as _Bus
 
-        original_estimate = sum(
-            len(str(m.get("content", ""))) for m in messages
-        ) // 4  # 粗略 token 估算（字元數 / 4）
+        original_estimate = (
+            sum(len(str(m.get("content", ""))) for m in messages) // 4
+        )  # 粗略 token 估算（字元數 / 4）
 
         history_text = _messages_to_text(messages)
         prompt = _COMPACT_PROMPT

@@ -25,6 +25,7 @@ async def running_daemon(free_port: int) -> AsyncGenerator[subprocess.Popen[byte
     env["AGENTX_PORT"] = str(free_port)
     env["AGENTX_LOG_FILE"] = ""
     env["AGENTX_LOG_LEVEL"] = "WARNING"
+    env.setdefault("ANTHROPIC_API_KEY", "test-api-key")
 
     proc = subprocess.Popen([sys.executable, "-m", "agentx.core"], env=env)
 

@@ -5,6 +5,7 @@ No daemon subprocess needed — uses AgentRunner in-process with a mock LLM
 provider and the real PermissionManager. BashTool runs real subprocesses, so
 commands must be safe (echo, true).
 """
+
 from __future__ import annotations
 
 from pathlib import Path

@@ -16,16 +16,28 @@ def test_task_to_dict_keys() -> None:
         updated_at="2024-01-01T00:00:00",
     )
     d = task.to_dict()
-    assert set(d) == {"id", "subject", "description", "status", "blocked_by", "created_at", "updated_at"}
+    assert set(d) == {
+        "id",
+        "subject",
+        "description",
+        "status",
+        "blocked_by",
+        "created_at",
+        "updated_at",
+    }
 
 
 # 功能：驗證 Task.from_dict() 能正確還原所有欄位
 # 設計：round-trip：to_dict → from_dict → 斷言欄位值相等
 def test_task_roundtrip() -> None:
     task = Task(
-        id=3, subject="write tests", description="cover all tools",
-        status="in_progress", blocked_by=[1, 2],
-        created_at="t1", updated_at="t2",
+        id=3,
+        subject="write tests",
+        description="cover all tools",
+        status="in_progress",
+        blocked_by=[1, 2],
+        created_at="t1",
+        updated_at="t2",
     )
     restored = Task.from_dict(task.to_dict())
     assert restored.id == 3
@@ -37,9 +49,23 @@ def test_task_roundtrip() -> None:
 # 功能：驗證不同例項的 blocked_by 列表互不共享
 # 設計：修改一個例項的列表，斷言另一個例項不受影響
 def test_task_blocked_by_not_shared() -> None:
-    t1 = Task(id=1, subject="a", description="", status="pending",
-              blocked_by=[], created_at="", updated_at="")
-    t2 = Task(id=2, subject="b", description="", status="pending",
-              blocked_by=[], created_at="", updated_at="")
+    t1 = Task(
+        id=1,
+        subject="a",
+        description="",
+        status="pending",
+        blocked_by=[],
+        created_at="",
+        updated_at="",
+    )
+    t2 = Task(
+        id=2,
+        subject="b",
+        description="",
+        status="pending",
+        blocked_by=[],
+        created_at="",
+        updated_at="",
+    )
     t1.blocked_by.append(99)
     assert t2.blocked_by == []

@@ -15,6 +15,7 @@ class McpServerUnavailableError(Exception):
 
 class McpToolError(Exception):
     """MCP server 返回的應用層錯誤（連線正常，但工具呼叫失敗）"""
+
     pass
 
 
@@ -46,9 +47,11 @@ class McpClient:
         env: dict[str, str] | None = None,
     ) -> None:
         import os
+
         merged_env = {**os.environ, **(env or {})}
         self._proc = await asyncio.create_subprocess_exec(
-            command, *args,
+            command,
+            *args,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
@@ -64,18 +67,23 @@ class McpClient:
 
     # 透過 TCP 連線到 MCP server 並完成 initialize 握手
     async def connect_tcp(self, host: str, port: int) -> None:
-        self._reader, tcp_writer = await asyncio.open_connection(host, port, limit=self._STREAM_LIMIT)
+        self._reader, tcp_writer = await asyncio.open_connection(
+            host, port, limit=self._STREAM_LIMIT
+        )
         self._tcp_writer = tcp_writer
         self._transport = "tcp"
         await self._initialize()
 
     # 傳送 initialize 請求完成 MCP 握手
     async def _initialize(self) -> None:
-        await self._call("initialize", {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {},
-            "clientInfo": {"name": "agentx", "version": "0.1"},
-        })
+        await self._call(
+            "initialize",
+            {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "agentx", "version": "0.1"},
+            },
+        )
         await self._notify("notifications/initialized", {})
 
     # 列出 MCP server 提供的工具定義
@@ -83,14 +91,16 @@ class McpClient:
         response = await self._call("tools/list", {})
         tools = []
         for t in response.get("tools", []):
-            tools.append(McpToolDef(
-                name=t.get("name", ""),
-                description=t.get("description", ""),
-                input_schema=t.get("inputSchema", {}),
-            ))
+            tools.append(
+                McpToolDef(
+                    name=t.get("name", ""),
+                    description=t.get("description", ""),
+                    input_schema=t.get("inputSchema", {}),
+                )
+            )
         return tools
 
-    # 呼叫 MCP server 上的工具，返回所有 text 內容拼接；連線異常拋 McpServerUnavailableError，工具錯誤拋 McpToolError
+    # 呼叫 MCP 工具並將連線與工具錯誤轉成對應例外
     async def call_tool(self, name: str, arguments: dict[str, Any]) -> str:
         response = await self._call("tools/call", {"name": name, "arguments": arguments})
         parts: list[str] = []

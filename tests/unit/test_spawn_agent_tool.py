@@ -58,10 +58,12 @@ def _make_tool(
 @pytest.mark.asyncio
 async def test_foreground_returns_result(tmp_path: Path) -> None:
     tool, _, _ = _make_tool(tmp_path, _make_provider("analysis complete"))
-    result = await tool.invoke({
-        "description": "分析程式碼",
-        "prompt": "分析 src/ 目錄",
-    })
+    result = await tool.invoke(
+        {
+            "description": "分析程式碼",
+            "prompt": "分析 src/ 目錄",
+        }
+    )
     assert not result.is_error
     assert "analysis complete" in result.content
 
@@ -71,11 +73,13 @@ async def test_foreground_returns_result(tmp_path: Path) -> None:
 @pytest.mark.asyncio
 async def test_background_returns_run_id(tmp_path: Path) -> None:
     tool, registry, _ = _make_tool(tmp_path)
-    result = await tool.invoke({
-        "description": "後臺任務",
-        "prompt": "做點事",
-        "run_in_background": True,
-    })
+    result = await tool.invoke(
+        {
+            "description": "後臺任務",
+            "prompt": "做點事",
+            "run_in_background": True,
+        }
+    )
     assert not result.is_error
     assert "run_id=" in result.content
     # extract run_id from message
@@ -102,11 +106,13 @@ async def test_agent_result_pending(tmp_path: Path) -> None:
     provider.chat = slow_chat
 
     tool, registry, _ = _make_tool(tmp_path, provider)
-    spawn_result = await tool.invoke({
-        "description": "slow task",
-        "prompt": "do something slow",
-        "run_in_background": True,
-    })
+    spawn_result = await tool.invoke(
+        {
+            "description": "slow task",
+            "prompt": "do something slow",
+            "run_in_background": True,
+        }
+    )
     run_id = spawn_result.content.split("run_id=")[1].split(".")[0]
 
     result_tool = AgentResultTool(registry)
@@ -123,11 +129,13 @@ async def test_agent_result_pending(tmp_path: Path) -> None:
 @pytest.mark.asyncio
 async def test_agent_result_done(tmp_path: Path) -> None:
     tool, registry, _ = _make_tool(tmp_path, _make_provider("final answer"))
-    spawn_result = await tool.invoke({
-        "description": "bg task",
-        "prompt": "do it",
-        "run_in_background": True,
-    })
+    spawn_result = await tool.invoke(
+        {
+            "description": "bg task",
+            "prompt": "do it",
+            "run_in_background": True,
+        }
+    )
     run_id = spawn_result.content.split("run_id=")[1].split(".")[0]
 
     entry = registry.get(run_id)
@@ -147,10 +155,12 @@ async def test_agent_result_done(tmp_path: Path) -> None:
 async def test_nesting_limit(tmp_path: Path) -> None:
     provider = _make_provider()
     tool, _, _ = _make_tool(tmp_path, provider, depth=2)
-    result = await tool.invoke({
-        "description": "nested",
-        "prompt": "do nested work",
-    })
+    result = await tool.invoke(
+        {
+            "description": "nested",
+            "prompt": "do nested work",
+        }
+    )
     assert result.is_error
     assert "nesting limit" in result.content
     provider.chat.assert_not_called()
@@ -181,10 +191,12 @@ async def test_foreground_publishes_started_event(tmp_path: Path) -> None:
 
     bus.subscribe(_collect)
 
-    await tool.invoke({
-        "description": "test task",
-        "prompt": "test prompt",
-    })
+    await tool.invoke(
+        {
+            "description": "test task",
+            "prompt": "test prompt",
+        }
+    )
     started = [e for e in events if isinstance(e, SubagentStartedEvent)]
     assert len(started) == 1
     assert started[0].parent_run_id == "parent-run-01"

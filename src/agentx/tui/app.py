@@ -6,8 +6,6 @@ import logging
 import time
 from typing import Any
 
-log = logging.getLogger(__name__)
-
 from rich.markdown import Markdown
 from textual import events
 from textual.app import App, ComposeResult
@@ -22,11 +20,11 @@ from agentx.core.config import AgentXConfig
 from agentx.core.skills.loader import SkillLoader
 from agentx.core.transport.socket_client import IpcError, SocketClient
 
+log = logging.getLogger(__name__)
+
 
 def _preview(s: str, n: int) -> str:
     return s[:n] + "…" if len(s) > n else s
-
-
 
 
 def _params_str(params: dict[str, Any]) -> str:
@@ -156,16 +154,20 @@ class PermissionSelect(Static):
     """
 
     _CHOICES: tuple[tuple[str, str, str], ...] = (
-        ("allow_once",   "Allow once",   "y / 1"),
+        ("allow_once", "Allow once", "y / 1"),
         ("always_allow", "Always allow", "a / 2"),
-        ("deny_once",    "Deny",         "n / 3"),
-        ("always_deny",  "Always deny",  "d / 4"),
+        ("deny_once", "Deny", "n / 3"),
+        ("always_deny", "Always deny", "d / 4"),
     )
     _KEY_MAP: dict[str, str] = {
-        "y": "allow_once",  "1": "allow_once",
-        "a": "always_allow","2": "always_allow",
-        "n": "deny_once",   "3": "deny_once",
-        "d": "always_deny", "4": "always_deny",
+        "y": "allow_once",
+        "1": "allow_once",
+        "a": "always_allow",
+        "2": "always_allow",
+        "n": "deny_once",
+        "3": "deny_once",
+        "d": "always_deny",
+        "4": "always_deny",
     }
 
     # 使用者作出許可權決策時釋出，攜帶工具 ID 和決策字串
@@ -204,7 +206,11 @@ class PermissionSelect(Static):
 
     # 焦點到達時記錄，用於確認 focus() 是否真正生效
     def on_focus(self, event: events.Focus) -> None:
-        log.debug("PermissionSelect.on_focus  has_focus=%s  app.focused=%r", self.has_focus, self.app.focused)
+        log.debug(
+            "PermissionSelect.on_focus  has_focus=%s  app.focused=%r",
+            self.has_focus,
+            self.app.focused,
+        )
 
     # 焦點離開時記錄，用於追蹤是否被其他控制元件搶走焦點
     def on_blur(self, event: events.Blur) -> None:
@@ -252,11 +258,11 @@ class PermissionBlock(Static):
     """日誌裡的許可權審批摘要"""
 
     _LABEL_MAP: dict[str, str] = {
-        "allow_once":   "allowed (once)",
+        "allow_once": "allowed (once)",
         "always_allow": "always allowed",
-        "deny_once":    "denied",
-        "always_deny":  "always denied",
-        "timeout":      "⏱ timed out",
+        "deny_once": "denied",
+        "always_deny": "always denied",
+        "timeout": "⏱ timed out",
     }
     LABEL_MAP = _LABEL_MAP
 
@@ -647,11 +653,13 @@ class AgentXTuiApp(App[None]):
             summary_tokens = result.get("summary_tokens", 0)
             saved_tokens = result.get("saved_tokens", 0)
             self._last_context_pct = 0.0
-            self._append(Static(
-                f"[bold cyan]⚡ Context compacted[/bold cyan]"
-                f"  [dim]summary={summary_tokens} tokens  saved≈{saved_tokens} tokens[/dim]",
-                classes="log-line",
-            ))
+            self._append(
+                Static(
+                    f"[bold cyan]⚡ Context compacted[/bold cyan]"
+                    f"  [dim]summary={summary_tokens} tokens  saved≈{saved_tokens} tokens[/dim]",
+                    classes="log-line",
+                )
+            )
         except (IpcError, RuntimeError, OSError) as e:
             self._append(Static(f"[red]compact error: {e}[/red]", classes="log-line"))
 
@@ -783,9 +791,11 @@ class AgentXTuiApp(App[None]):
 
             try:
                 loop_task.add_done_callback(
-                    lambda t: log.error("loop_task failed: %s", t.exception())
-                    if not t.cancelled() and t.exception() is not None
-                    else None
+                    lambda t: (
+                        log.error("loop_task failed: %s", t.exception())
+                        if not t.cancelled() and t.exception() is not None
+                        else None
+                    )
                 )
                 params: dict[str, Any] = {
                     "topics": [
@@ -879,20 +889,24 @@ class AgentXTuiApp(App[None]):
         elif t == "run.started":
             run_id = event.get("run_id", "")
             goal = event.get("goal", "")
-            self._append(Static(
-                f"[dim]run[/dim]  [cyan]{run_id}[/cyan]  [dim]{_preview(goal, 96)}[/dim]",
-                classes="run-header",
-            ))
+            self._append(
+                Static(
+                    f"[dim]run[/dim]  [cyan]{run_id}[/cyan]  [dim]{_preview(goal, 96)}[/dim]",
+                    classes="run-header",
+                )
+            )
 
         elif t == "skill.invoked":
             skill_name = event.get("skill_name", "")
             arguments = event.get("arguments", "")
             args_preview = _preview(arguments, 80) if arguments else ""
             args_part = f"  [dim]{args_preview}[/dim]" if args_preview else ""
-            self._append(Static(
-                f"[bold cyan]/{skill_name}[/bold cyan]{args_part}",
-                classes="log-line",
-            ))
+            self._append(
+                Static(
+                    f"[bold cyan]/{skill_name}[/bold cyan]{args_part}",
+                    classes="log-line",
+                )
+            )
 
         elif t == "subagent.started":
             run_id = event.get("run_id", "")
@@ -900,10 +914,13 @@ class AgentXTuiApp(App[None]):
             self._subagent_run_ids[run_id] = description
             self._subagent_start_times[run_id] = time.monotonic()
             short_id = run_id[:8] if len(run_id) >= 8 else run_id
-            self._append(Static(
-                f"[dim]┌─[/dim] [cyan]{_preview(description, 72)}[/cyan]  [dim]{short_id}[/dim]",
-                classes="log-line",
-            ))
+            description_preview = _preview(description, 72)
+            self._append(
+                Static(
+                    f"[dim]┌─[/dim] [cyan]{description_preview}[/cyan]  [dim]{short_id}[/dim]",
+                    classes="log-line",
+                )
+            )
 
         elif t == "subagent.finished":
             run_id = event.get("run_id", "")
@@ -913,25 +930,31 @@ class AgentXTuiApp(App[None]):
             elapsed = f"  [dim]{time.monotonic() - start:.1f}s[/dim]" if start is not None else ""
             desc_part = f"[cyan]{_preview(description, 72)}[/cyan]{elapsed}"
             if status == "success":
-                self._append(Static(
-                    f"[dim]└─[/dim] [bold green]✓[/bold green] {desc_part}",
-                    classes="log-line",
-                ))
+                self._append(
+                    Static(
+                        f"[dim]└─[/dim] [bold green]✓[/bold green] {desc_part}",
+                        classes="log-line",
+                    )
+                )
             else:
-                self._append(Static(
-                    f"[dim]└─[/dim] [bold red]✗[/bold red] {desc_part}",
-                    classes="log-line",
-                ))
+                self._append(
+                    Static(
+                        f"[dim]└─[/dim] [bold red]✗[/bold red] {desc_part}",
+                        classes="log-line",
+                    )
+                )
 
         elif t == "step.started":
             run_id = event.get("run_id", "")
             if run_id in self._subagent_run_ids:
                 return
             step = event.get("step", "")
-            self._append(Static(
-                f"[dim]step {step}[/dim]",
-                classes="step-divider",
-            ))
+            self._append(
+                Static(
+                    f"[dim]step {step}[/dim]",
+                    classes="step-divider",
+                )
+            )
 
         elif t == "tool.call_started":
             tool_use_id = str(event.get("tool_use_id", ""))
@@ -965,16 +988,20 @@ class AgentXTuiApp(App[None]):
             steps = event.get("steps", 0)
             reason = event.get("reason") or ""
             if status == "success":
-                self._append(Static(
-                    f"[bold green]✓ completed[/bold green]  [dim]{steps} steps[/dim]",
-                    classes="run-ok",
-                ))
+                self._append(
+                    Static(
+                        f"[bold green]✓ completed[/bold green]  [dim]{steps} steps[/dim]",
+                        classes="run-ok",
+                    )
+                )
             else:
                 detail = f"  [dim]{reason}[/dim]" if reason else ""
-                self._append(Static(
-                    f"[bold red]✗ failed[/bold red]{detail}  [dim]{steps} steps[/dim]",
-                    classes="run-err",
-                ))
+                self._append(
+                    Static(
+                        f"[bold red]✗ failed[/bold red]{detail}  [dim]{steps} steps[/dim]",
+                        classes="run-err",
+                    )
+                )
 
         elif t == "llm.usage":
             run_id = event.get("run_id", "")
@@ -983,24 +1010,28 @@ class AgentXTuiApp(App[None]):
             pct = float(event.get("context_pct") or 0.0)
             self._last_context_pct = pct
             ctx_bar = self._render_ctx_bar(pct)
-            self._append(Static(
-                f"[dim]  tokens  "
-                f"in={event.get('input_tokens')} "
-                f"out={event.get('output_tokens')} "
-                f"cache={event.get('cache_read_input_tokens')}[/dim]"
-                f"  {ctx_bar}",
-                classes="usage",
-            ))
+            self._append(
+                Static(
+                    f"[dim]  tokens  "
+                    f"in={event.get('input_tokens')} "
+                    f"out={event.get('output_tokens')} "
+                    f"cache={event.get('cache_read_input_tokens')}[/dim]"
+                    f"  {ctx_bar}",
+                    classes="usage",
+                )
+            )
 
         elif t == "context.compacted":
             orig = event.get("original_tokens", 0)
             summary = event.get("summary_tokens", 0)
             self._last_context_pct = 0.0
-            self._append(Static(
-                f"[bold cyan]⚡ Context compacted[/bold cyan]"
-                f"  [dim]original≈{orig} tokens → summary={summary} tokens[/dim]",
-                classes="log-line",
-            ))
+            self._append(
+                Static(
+                    f"[bold cyan]⚡ Context compacted[/bold cyan]"
+                    f"  [dim]original≈{orig} tokens → summary={summary} tokens[/dim]",
+                    classes="log-line",
+                )
+            )
 
         elif t == "permission.requested":
             tool_use_id = str(event.get("tool_use_id", ""))
@@ -1012,7 +1043,9 @@ class AgentXTuiApp(App[None]):
                 _focused_repr = "?"
             log.info(
                 "permission.requested tool=%s id=%s  app.focused=%s",
-                tool_name, tool_use_id, _focused_repr,
+                tool_name,
+                tool_use_id,
+                _focused_repr,
             )
             perm_block = PermissionBlock(tool_use_id, tool_name, param_preview)
             self._pending_permission_blocks[tool_use_id] = perm_block
@@ -1023,10 +1056,13 @@ class AgentXTuiApp(App[None]):
             self._append(perm_block)
             select = PermissionSelect(tool_use_id)
             self._mount_permission_select(select)
-            log.debug("PermissionSelect mounted before #prompt  pending=%d", len(self._pending_permission_blocks))
+            log.debug(
+                "PermissionSelect mounted before #prompt  pending=%d",
+                len(self._pending_permission_blocks),
+            )
 
         elif t == "permission.denied":
-            # 處理超時或斷連等非使用者互動觸發的 deny（使用者主動 deny 已由 on_permission_select_decided 處理）
+            # 處理逾時或斷線觸發的拒絕；使用者主動拒絕已由選擇事件處理
             tool_use_id = str(event.get("tool_use_id", ""))
             decision = str(event.get("decision", "denied"))
             if tool_use_id in self._pending_permission_blocks:
@@ -1048,11 +1084,13 @@ class AgentXTuiApp(App[None]):
         elif t == "log.line":
             level = event.get("level", "INFO")
             color = "bold red" if level == "ERROR" else ("yellow" if level == "WARNING" else "dim")
-            self._append(Static(
-                f"[{color}]{level}[/{color}]  "
-                f"[dim]{event.get('source', '')}[/dim]  {event.get('message', '')}",
-                classes="log-line",
-            ))
+            self._append(
+                Static(
+                    f"[{color}]{level}[/{color}]  "
+                    f"[dim]{event.get('source', '')}[/dim]  {event.get('message', '')}",
+                    classes="log-line",
+                )
+            )
 
 
 # TUI 入口：讀取配置並啟動 AgentXTuiApp

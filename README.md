@@ -1,345 +1,279 @@
-# AgentX
+<div align="center">
 
-我最近在公眾號「卡碼大模型」上，更新了很多關於 Agent、codex、Claude工作原理的文章。
+# 🤖 AgentX
 
-這些文章目前已經沉澱在卡碼筆記上：[https://notes.agentxcoder.com](https://notes.agentxcoder.com)
+**一套可觀察、可治理、可擴充的本地 AI Agent 執行環境。**
 
-![](docs/images/2026-06-10_09-28-51.jpg)
+以 Python 實作完整 ReAct 迴圈，透過常駐 Core、CLI 與 TUI 串接工具呼叫、權限審批、事件流、長期會話、上下文壓縮、Skills、Subagents 與 MCP。
 
-很多錄友反饋：
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![Textual](https://img.shields.io/badge/TUI-Textual-FFCC00)
+![Anthropic](https://img.shields.io/badge/LLM-Anthropic-D97757)
+![Tests](https://img.shields.io/badge/Tests-pytest-0A9EDC?logo=pytest&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
-卡哥，我看了很多文章，也知道 Agent Loop、ReAct、Tool Use、MCP 這些詞，但總感覺隔了一層。
+</div>
 
-很多概念還停留在“知道名詞”的階段。
+---
 
-現在大家找工作。無論你是哪個方向，現在都需要有一個Agent專案。
+## 📖 專案介紹
 
-Agent 這個東西，光看文章還不夠。
+一般 AI Demo 通常把「接收輸入、呼叫模型、顯示答案」全部塞在同一個程式裡，難以處理長時間任務、多個客戶端、權限審批與中斷恢復。
 
-你得自己實現一個最小版本，親手把使用者輸入、拆解任務、loop、工具呼叫、事件流、許可權審批、上下文管理這些鏈路串起來，才會真正理解：
+AgentX 將真正執行任務的能力放進常駐的 `agentx-core`，CLI 與 TUI 都只是透過 TCP IPC 連線的客戶端。模型每一步的推理、工具呼叫、權限決策與 token 使用量都會成為事件，因此能即時顯示、寫入 JSONL，並在斷線後重新播放。
 
-**所謂 AI Agent，到底是怎麼跑起來的。**
+### 核心功能
 
-目前市面上，哪裡那個Agent做的最好，當然是Claude。
+- **ReAct Agent Loop**：支援模型思考、工具呼叫、結果回填與多步任務執行。
+- **Daemon + 多客戶端**：Core 持續執行，CLI 與 TUI 可同時訂閱同一份事件流。
+- **型別化 IPC**：使用 JSON-RPC 2.0 + NDJSON，命令回應與事件推送共用 TCP 連線。
+- **即時 TUI**：顯示串流 token、工具呼叫、執行狀態、權限審批與上下文水位。
+- **工具安全**：先驗證參數，再依策略允許、拒絕或交由使用者決定。
+- **可恢復會話**：儲存 thread、notes、run events 與 trace，支援斷線重連和事件重播。
+- **上下文治理**：三層 Context、工具結果截斷、手動與自動 Compact。
+- **多 Agent 協作**：以 planner、executor、reviewer 子 Agent 拆分複雜任務。
+- **Skills 工作流程**：用 `/review`、`/orchestrate` 等斜線命令套用固定流程與工具白名單。
+- **MCP 工具擴充**：將外部 MCP Server 工具接入既有 ToolRegistry、權限與事件鏈路。
 
-所以這次我在知識星球裡更新一個新的 AI Agent 專案：
+---
 
-**AgentX：從零實現一個本地 Claude Code Agent 系統（mini 版）。**
+## 👤 我的角色
 
-也可以理解為：我們自己動手實現一個 **minClaude**，不僅實現Agent核心，還是先一套 TUI。
+> 個人 AI Agent 系統專案
 
-大家可以看一下效果：（接入的是deepseek-v4-flash，當然大家也可以接入其他模型）。
+我負責將原始教學架構整理為獨立的 AgentX 專案，完成品牌與套件命名統一、繁體中文在地化、TUI 中文輸入修正、文件重構與測試環境整理。
 
-![](docs/images/2026-06-09_19-36-12.jpg)
+主要工作範圍：
 
-可以接入命令，可以使用skill，可控制上下文，可壓縮：
+- **核心執行環境**：AgentRunner、AgentLoop、LLM Provider 與 ToolRegistry。
+- **程式間通訊**：TCP、JSON-RPC 2.0、NDJSON 與事件廣播。
+- **互動介面**：Textual TUI、串流輸出、權限選擇與中文輸入。
+- **可靠性機制**：Session、JSONL 記錄、Trace、重連、Replay 與 Compact。
+- **擴充能力**：Skills、Subagents、角色工具邊界與 MCP。
 
-![](docs/images/2026-06-10_09-38-25.jpg)
+---
 
-可以下達一個稍稍負責的任務，AgentX自動完成規劃 並執行：
+## 💡 解決的問題
 
-（AgentX會先申請一下本地編輯許可權）
+- **任務不中斷**：TUI 關閉或重新連線時，Core 中的任務仍可持續執行。
+- **過程可追蹤**：不只顯示最後答案，也儲存每個 Run 的事件與完整 Trace。
+- **工具可治理**：具有副作用的操作必須經過權限策略，避免模型直接執行危險命令。
+- **長會話可續航**：系統會顯示 Context 水位，並可將歷史壓縮成可接續的交接摘要。
+- **複雜任務可分工**：父 Agent 負責協調，子 Agent 依角色進行規劃、執行與審查。
+- **外部能力可插拔**：MCP 工具可直接加入既有執行鏈路，不必修改 AgentLoop。
 
-![](docs/images/2026-06-10_09-41-25.jpg)
+---
 
-然後規劃並執行：
+## 🛠 技術棧
 
-![](docs/images/2026-06-10_09-42-43.jpg)
+**Python 3.12** · **asyncio** · **Anthropic SDK** · **Pydantic v2** · **Textual** · **Rich** · **JSON-RPC 2.0** · **NDJSON** · **MCP** · **pytest** · **Ruff** · **mypy** · **uv**
 
-當然，它不是要一比一復刻 Claude Code 的所有產品能力，而是把 Claude Code 這類 AI 程式設計 Agent 最核心的執行機制拆出來：
+---
 
-* 使用者輸入一個目標，Agent 能自己規劃下一步
-* 模型不是隻回答文字，而是能主動發起工具呼叫
-* 工具呼叫不是直接裸跑，而是有引數校驗和許可權審批
-* 執行過程不是黑盒，而是透過事件流即時展示到 TUI
-* 每一次 run 都能留下 events、trace、session 記錄，方便覆盤和排查
-* 多輪會話不是簡單拼接歷史，而是有 thread、notes、context 分層記憶
-* 上下文快爆了，不是粗暴截斷，而是有水位檢測和 compact 壓縮
-* 複雜任務可以交給子 Agent，外部工具可以透過 MCP 接進來
+## 🏗 系統架構
 
-我們要做的是一個真正能跑任務、能調工具、能看過程、能管許可權、能續上下文、能擴充套件生態的本地 Agent 執行時。
-
-你學完之後，再看 Claude Code、Codex、Cursor 這些 AI 程式設計工具，就不會只停留在“它好像很智慧”。
-
-你能看懂它背後那條工程主線：
-
-**使用者目標 → Agent Loop → 模型思考 → 工具呼叫 → 結果回填 → 事件展示 → 會話續航。**
-
-### 專案演示
-
-![](docs/images/2026-06-10_10-58-04.jpg)
-
-本影片只在[知識星球](https://programmercarl.com/other/kstar.html)裡，帶大家演示如何從零執行 AgentX，並完成一次完整的 Agent 使用體驗：
-
-* 克隆專案和切換階段分支
-* 配置 `.env`
-* 讓 Agent 寫一個一個任務
-* 配置 Skill 和 MCP
-* 在 TUI 裡看到工具呼叫、事件流、許可權審批和上下文水位
-
-### AgentX 長什麼樣？
-
-AgentX 的最終形態是這樣的：
-
-![](docs/images/2026-06-10_14-30-58.jpg)
-
-使用者不是直接和一個指令碼對話，而是透過 `agentx` CLI 或 `agentx-tui` 連線到常駐的 `agentx-core` 守護程式。
-
-真正執行任務的是 Core daemon。
-
-CLI 和 TUI 只是客戶端。
-
-這意味著：
-
-* TUI 崩了，Agent 任務不一定要跟著死
-* 後續可以同時接 CLI、TUI、Web 前端
-* 所有任務過程都能透過事件流訂閱
-* 所有命令、響應、事件都要透過型別化協議通訊
-* Agent 的工具呼叫、會話記憶、許可權審批、上下文壓縮，都在同一條執行鏈路裡完成
-
-這就是它和普通 AI Demo 最大的區別：
-
-**普通 Demo 是“呼叫模型”。AgentX 是“搭一個本地 Agent 執行時”。**
-
-### 專案專欄目錄
-
-![](docs/images/2026-06-10_11-55-26.jpg)
-
-從專案演示，執行到 專案實戰：架構如何設計、環境怎麼搭，Agent loop，上下文、可壓縮、MCP、skill支援這些如惡化設計。
-
-最後再到求職相關：專案的簡歷寫法、專案亮點、本專案常見面試題，都給大家準備好了。
-
-從**專案原始碼到答疑，一條龍服務，不用擔心學不會，有什麼問題都可以在專屬微信群提問**：（[知識星球](https://programmercarl.com/other/kstar.html)裡每個專案都有專屬答疑群）
-
-![](docs/images/2026-06-10_14-34-29.jpg)
-
-掃如下十元代金券，只需要 196 元，加入[知識星球](https://programmercarl.com/other/kstar.html)，你將獲得 **20+ 套專案教程專欄 + 原始碼 + 配套答疑**。
-
-每個專案平均不到十元錢，而且加入星球的服務遠不止這些專案。
-
-<div align="center"><img src='docs/images/2026-06-10_16-32-35.jpg' width=400 alt=''> </img></div>
-
-加入知識星球后，記得加如下微信，發動付款截圖，拉你到星球交流群：
-
-<div align="center"><img src='docs/images/202505141033981.png' width=400 alt=''> </img></div>
-
-如果你不知道知識星球對自己是否有幫助，可以先加入看看，感受一下星球裡的學習氛圍。
-
-**三天內（72h）可以全額退款。**
-
-### 專案特色
-
-這個專案，我採用全新的講解方式，不是一下子直接給大家全部專案程式碼。
-
-而且分成了 8個階段，一步一步，帶大家實現完整的agentxClaude。
-
-每個階段都不是堆功能，而是解決一個真實的 Agent 工程問題。
-
-![](docs/images/2026-06-10_11-01-32.jpg)
-
-| 階段 | 主題 | 這一階段真正解決的問題 |
-| --- | --- | --- |
-| S0 | 骨架與協議契約 | CLI 和 daemon 透過真實 IPC 完成一次 ping/pong |
-| S1 | Agent 最小閉環 | 一次 `agentx run` 從 goal 到 LLM、工具、事件檔案完整跑通 |
-| S2 | 事件流外化 | AgentRunner 搬進 daemon，CLI/TUI 透過 IPC 訂閱同一份事件流 |
-| S3 | 自主規劃與 TUI | Agent 能用任務工具拆解複雜目標，TUI 展示完整執行過程 |
-| Trace | 系統級時間線 | IPC / EventBus / LLM 三層資料流可追蹤、可回放 |
-| S4 | 會話與記憶 | 多輪 run 進入同一個 session，thread 和 notes 接住上下文 |
-| S5 | 工具安全 | 工具呼叫前有引數校驗、許可權審批、失敗分類和重試 |
-| S6 | 上下文治理 | 長會話下有 context 水位、tool_result 截斷和 compact |
-| S7 | 擴充套件邊界 | Skills、Subagents、MCP 讓 Agent 可組織、可派生、可接外部工具 |
-
-從第一章開始，專案就不是“先寫一個指令碼，後面再慢慢重構”。
-
-AgentX 在 S0 就先把 `agentx` CLI 和 `agentx-core` daemon 拆開，透過 TCP NDJSON + JSON-RPC 2.0 通訊。
-
-這一步看起來比普通腳手架更重，但它換來的是後面所有能力都不用推倒重來：
-
-* TUI 可以複用同一套 IPC
-* 事件訂閱可以複用同一套通道
-* 許可權審批可以透過事件推到前端
-* trace 可以記錄完整請求和響應
-* 後續 Web 前端也可以接入同一個 Core
-
-這就是工程專案裡真正值錢的地方。
-
-不是“能不能跑”，而是系統邊界一開始就立住。
-
-### 專案架構圖
-
-![](docs/images/20260610114820_AgentX架構圖-分層版.png)
-
-AgentX 的核心不是一個 prompt，而是一套完整的本地 Agent 執行鏈路：
-
-```latex
-使用者目標
-  → CLI / TUI
-  → JSON-RPC over NDJSON
-  → agentx-core daemon
-  → AgentRunner
-  → AgentLoop
-  → LLM Provider
-  → ToolRegistry
-  → PermissionManager
-  → EventBus
-  → Session Store
-  → TUI 即時渲染 / events.jsonl 持久化 / trace 回放
+```text
+                    ┌──────────────────────┐
+                    │   agentx-core daemon │
+                    │   127.0.0.1:7437     │
+                    └──────────┬───────────┘
+                               │
+                 JSON-RPC 2.0 + NDJSON / TCP
+                               │
+                    ┌──────────┴──────────┐
+                    │                     │
+               agentx CLI           agentx-tui
+                                          │
+使用者目標                                │ 即時事件
+    ↓                                     │
+SessionManager → AgentRunner → AgentLoop  │
+                              ├─ LLM Provider
+                              ├─ ToolRegistry ── MCP Tools
+                              ├─ PermissionManager
+                              └─ EventBus ───────┬─ TUI
+                                                ├─ events.jsonl
+                                                └─ TraceWriter
 ```
 
-你學完以後，面試官再問 AI Agent 專案，你就不是說：
+一次任務的主要流程：
+
+```text
+CLI / TUI 接收指令
+↓
+讀取設定並連接 Core
+↓
+透過 TCP 傳送 JSON-RPC / NDJSON
+↓
+Core 驗證 Request
+↓
+method 路由到 Handler
+↓
+AgentLoop 呼叫模型與工具
+↓
+EventBus 廣播並保存事件
+↓
+CLI / TUI 驗證 Response 並顯示結果
+```
+
+---
+
+## 📂 專案結構
+
+```text
+AI-Agent/
+├── src/agentx/
+│   ├── cli/                    # CLI 指令與輸出
+│   ├── tui/                    # Textual 終端介面
+│   └── core/
+│       ├── agents/             # planner / executor / reviewer 設定
+│       ├── bus/                # JSON-RPC 命令、事件與 envelope
+│       ├── compact/            # 上下文壓縮
+│       ├── events/             # EventBus 與 JSONL Writer
+│       ├── llm/                # Anthropic Provider 與串流回應
+│       ├── mcp/                # MCP Client、Manager 與工具包裝
+│       ├── permissions/        # 權限策略、審批與持久化
+│       ├── session/            # 會話、Thread、Notes 與 Run
+│       ├── skills/             # 斜線命令工作流程
+│       ├── subagent/           # 子 Agent 與背景任務
+│       ├── tools/              # 內建工具與 ToolRegistry
+│       └── transport/          # TCP Socket Client / Server
+├── tests/
+│   ├── unit/                   # 單元測試
+│   └── integration/            # 真實程式間通訊測試
+├── scripts/                    # 協議文件產生器
+├── WIRE_PROTOCOL.md            # 自動產生的 IPC 協議文件
+├── RUNBOOK.md                  # 維運與故障排除
+├── pyproject.toml
+└── Makefile
+```
+
+---
+
+## 🚀 快速開始
+
+### 1. 安裝環境
+
+需要 Python 3.12 與 [uv](https://docs.astral.sh/uv/)。
+
+```bash
+git clone https://github.com/poweichen00/AI-Agent.git
+cd AI-Agent
+uv sync
+cp .env.example .env
+```
+
+在 `.env` 填入：
+
+```bash
+ANTHROPIC_API_KEY=你的_API_Key
+```
+
+### 2. 啟動 AgentX
+
+終端 A 啟動 Core：
 
-“我呼叫了大模型 API。”
+```bash
+uv run agentx-core
+```
 
-而是能說：
+終端 B 啟動 TUI：
 
-* 我實現了 ReAct AgentLoop 和工具呼叫閉環
-* 我用 EventBus 把 Agent 執行過程外化成事件流
-* 我實現了 TUI 即時渲染、工具摺疊塊、許可權審批卡片
-* 我實現了 Session、thread、notes 三層記憶體系
-* 我實現了上下文水位檢測、tool_result 截斷、自動 compact 和手動 compact
-* 我實現了 Skills、Subagents、MCP 外部工具接入
-* 我用 pytest、mypy strict、ruff 保證專案質量
-* 我實現了守護程式 + 多客戶端架構
-* 我設計了 JSON-RPC 2.0 + NDJSON 的型別化 IPC 協議
+```bash
+uv run agentx-tui
+```
 
-這就不是“AI 套殼專案”了。
+也可以用 CLI 觸發單次任務：
 
-這是一個能拿去講系統設計、非同步併發、協議建模、工具安全、上下文工程、多 Agent 編排的高質量專案。
+```bash
+uv run agentx run --goal "用一句話介紹你自己"
+```
 
-### 專案亮點
+### 3. 驗證 Skills 與 Subagents
 
-![](docs/images/2026-06-10_11-48-11.jpg)
+在 TUI 輸入：
 
-AgentX 最大的亮點，是把 Claude Code 這類 AI 程式設計 Agent 背後的核心機制，用一個 mini 版工程完整跑通：它不是單程式指令碼，而是 `agentx-core` daemon + CLI/TUI 多客戶端架構；
+```text
+/review src/agentx/core/loop.py
+```
 
-不是一次性調大模型，而是 ReAct AgentLoop，支援模型思考、工具呼叫、結果回填和多步執行；
+測試多 Agent 工作流程：
 
-不是讓模型說執行就執行，而是把工具呼叫放進 `ToolRegistry` 和 `PermissionManager`，先做引數校驗、許可權審批、失敗分類，再把 tool result 返回給模型；
+```text
+/orchestrate 分析 src/agentx/core/runner.py 的重構風險，不要修改任何檔案
+```
 
-不是隻展示最終答案，而是透過 `EventBus`、events、trace 和 TUI，把 token 流、工具呼叫、審批、上下文水位都即時展示並可回放；
+---
 
-不是簡單拼接聊天曆史，而是用 session、thread、notes、context 和 compact 做上下文治理；
+## 🧪 品質檢查
 
-最後還支援 Skills、Subagents、MCP，把工作流、子 Agent 和外部工具統一接進同一套執行鏈路。
+```bash
+# 單元測試
+uv run pytest tests/unit -v
 
-也就是說，這個專案真正能講的不是“我接了一個大模型介面”，而是“我實現了一個本地 Agent 執行時”。
+# 全部測試
+uv run pytest
 
+# 程式風格與靜態型別
+uv run ruff check src tests scripts
+uv run mypy src
 
-### 這個專案適合誰？
+# 確認 IPC 文件與模型同步
+uv run python scripts/gen_protocol_doc.py --check
+```
 
-如果你正在準備秋招、春招、實習、社招，想做一個 AI 專案，想了解Agent工作原理，這個專案很適合你。
+也可以執行：
 
-如果你已經做過 RAG、聊天機器人、AI 助手，想把專案深度往 Agent 工程方向拔高，這個專案也很適合。
+```bash
+make test
+make lint
+```
 
-如果你想理解 Claude Code、Codex、Cursor 這類 AI 程式設計工具背後的執行時設計，這個專案同樣值得系統學一遍。
+---
 
-它不是教你背概念。
+## 💾 執行資料
 
-**它是帶你從 S0 到 S7，八個階段，把一個本地 Agent 工具從零搭出來**。
+AgentX 預設將本機狀態儲存於：
 
-每一章都有明確的執行路徑，每一階段都能執行、能驗證、能留下檔案證據。
+```text
+~/.agentx/
+├── config.toml                 # 全域設定
+├── context.md                  # 全域 Context
+├── policy.toml                 # 持久化權限決策
+├── logs/core.log               # Core 日誌
+├── traces/daemon.jsonl         # 系統 Trace
+└── sessions/<session_id>/
+    ├── thread.jsonl            # 對話歷史
+    ├── notes.md                # Session 備註
+    ├── summary_*.md            # Compact 摘要
+    └── runs/<run_id>/events.jsonl
+```
 
-你不是最後拿到一個黑盒專案。
+`.env`、API Key 與 `~/.agentx/` 都不會提交至 Git。
 
-你會知道它每一層為什麼存在。
+---
 
-### 專案專欄
+## 🔌 MCP 設定範例
 
-**本專案為文字專欄講解方式，不過在專案環境配置，啟動，使用上 給大家錄製了影片**。
+在 `~/.agentx/config.toml` 加入：
 
-專案專欄把 簡歷寫法、專案亮點、常見面試題 都準備好了，大家做完這個專案可以直接用。
+```toml
+[[mcp.servers]]
+name = "filesystem"
+transport = "stdio"
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+```
 
-![](docs/images/2026-06-10_12-11-45.jpg)
+重新啟動 Core 後，外部工具會以 `filesystem__工具名稱` 的形式註冊，並沿用 AgentX 的工具白名單、權限審批、錯誤分類與事件顯示。
 
-本專案分成8個階段完成，每一階段都有詳細講解：
+---
 
-S0、專案基礎架構：
+## 📫 聯絡方式
 
-![](docs/images/2026-06-10_12-04-20.jpg)
+**poweichen00** — [GitHub](https://github.com/poweichen00) · [專案原始碼](https://github.com/poweichen00/AI-Agent)
 
-S1、Agent 第一次執行
+---
 
-![](docs/images/2026-06-10_12-04-40.jpg)
+## 📄 授權
 
-S2、把事件流外化為 IPC
-
-![](docs/images/2026-06-10_12-04-59.jpg)
-
-S3、trace
-
-![](docs/images/2026-06-10_12-05-39.jpg)
-
-S3、Agent 的自主規劃
-
-![](docs/images/2026-06-10_12-05-39.jpg)
-
-S4、把 Agent 變成會話夥伴
-
-![](docs/images/2026-06-10_12-05-56.jpg)
-
-S5、給工具加上安全鎖
-
-![](docs/images/2026-06-10_12-06-13.jpg)
-
-
-S6、讓上下文可控、可壓縮、可續航
-
-![](docs/images/2026-06-10_12-06-32.jpg)
-
-S7、Skills、Subagents 與 MCP
-
-![](docs/images/2026-06-10_12-06-51.jpg)
-
-
-### 加入知識星球獲取本專案
-
-掃如下十元代金券，只需要 196 元，加入[知識星球](https://programmercarl.com/other/kstar.html)，你將獲得 **20+ 套專案教程專欄 + 原始碼 + 配套答疑**。
-
-每個專案平均不到十元錢，而且加入星球的服務遠不止這些專案。
-
-<div align="center"><img src='docs/images/2026-06-10_16-32-35.jpg' width=400 alt=''> </img></div>
-
-加入知識星球后，記得加如下微信，發動付款截圖，拉你到星球交流群：
-
-<div align="center"><img src='docs/images/202505141033981.png' width=400 alt=''> </img></div>
-
-
-如果你不知道知識星球對自己是否有幫助，可以先加入看看，感受一下星球裡的學習氛圍。
-
-**三天內（72h）可以全額退款。**
-
-知識星球 APP 右上角自己申請退款，一個小時到賬，全程無套路。
-
-記得是三天內（72h）才能退款。
-
-### QA
-
-**1、這個專案有影片嗎**？
-
-專案如何配置環境，啟動，部署，執行，已經功能介紹，是有影片的。
-
-主要專案講解為文字專欄的方式。
-
-專案有專屬答疑微信群，不懂得的地方可以在群裡提問，我們都會答疑。
-
-**2、這個專案用什麼語言開發**？
-
-Python
-
-**3、AgentX專案用Python實現，有其他語言版本嗎**？
-
-實現一個Agent 關鍵在於Agent的原理，面試官不會問你 你用什麼語言實現的Agent。
-
-就像大家目前看到 Claude原理的文章，沒有人會重點強調這是用什麼語言實現的，而是強調Claude 這個agent的原理。
-
-所以 在開發 AgentX，我們考慮使用python，就是因為python最容易上手。
-
-**4、我是C++、Java、Go或者其他語言選手，能做這個專案嗎**？
-
-如果是 C++、Java、Go或者其他語言選手，做個專案沒問題，這個專案寫簡歷上，面試官也不會問你語言問題，而是聚焦Agent的設計與實現。
-
-我們專案專欄上，簡歷寫法，專案亮點，都不強調程式語言，都聚焦Agent原理。
-
-
-
-
+本專案使用 [MIT License](LICENSE)。衍生與修改內容仍保留原始專案的授權聲明。

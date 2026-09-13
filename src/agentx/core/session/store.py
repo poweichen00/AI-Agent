@@ -105,6 +105,7 @@ class SessionStore:
 
         messages = self._trim_orphan_tool_use(messages)
         from agentx.core.compact.budget import truncate_tool_results
+
         return truncate_tool_results(messages)
 
     # 裁掉尾部未配對 tool_use 以及其後的訊息，避免 Anthropic messages.invalid

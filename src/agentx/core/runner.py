@@ -221,7 +221,9 @@ class AgentRunner:
                 )
                 compactor = Compactor(bus, session_dir, session_id_str)
                 loop = AgentLoop(
-                    provider, registry, bus,
+                    provider,
+                    registry,
+                    bus,
                     permission_manager=self._permission_manager,
                     compactor=compactor,
                     compact_threshold=self._config.compaction.auto_threshold,

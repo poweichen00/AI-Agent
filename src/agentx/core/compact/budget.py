@@ -29,8 +29,7 @@ def truncate_tool_results(
                     omitted = len(text) - keep
                     block = dict(block)
                     block["content"] = (
-                        text[:keep]
-                        + f"\n[... {omitted} chars omitted. Full output in run events.]"
+                        text[:keep] + f"\n[... {omitted} chars omitted. Full output in run events.]"
                     )
             new_blocks.append(block)
         result.append({**msg, "content": new_blocks})

@@ -46,7 +46,7 @@ class TaskManager:
         description: str = "",
         blocked_by: list[int] | None = None,
     ) -> Task:
-        for dep_id in (blocked_by or []):
+        for dep_id in blocked_by or []:
             if not (self._dir / f"task_{dep_id}.json").exists():
                 raise ValueError(f"blocked_by task {dep_id} not found")
         now = _now()

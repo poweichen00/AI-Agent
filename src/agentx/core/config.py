@@ -51,20 +51,20 @@ class PermissionConfig:
 
 @dataclass
 class CompactionConfig:
-    auto_threshold: float = 0.0    # context_pct 觸發自動壓縮的閾值（0 表示停用，推薦用手動 /compact）
+    auto_threshold: float = 0.0  # context_pct 觸發自動壓縮的閾值（0 表示停用，推薦用手動 /compact）
     tool_result_limit: int = 8_000  # tool_result 截斷觸發字元數
-    tool_result_keep: int = 4_000   # 截斷後保留的字首字元數
+    tool_result_keep: int = 4_000  # 截斷後保留的字首字元數
 
 
 @dataclass
 class McpServerConfig:
     name: str
-    transport: str = "stdio"       # "stdio" | "tcp"
-    command: str = ""              # stdio 專用：可執行檔案路徑
+    transport: str = "stdio"  # "stdio" | "tcp"
+    command: str = ""  # stdio 專用：可執行檔案路徑
     args: list[str] = field(default_factory=list)
     env: dict[str, str] = field(default_factory=dict)
-    host: str = "localhost"        # tcp 專用
-    port: int = 3000               # tcp 專用
+    host: str = "localhost"  # tcp 專用
+    port: int = 3000  # tcp 專用
 
 
 @dataclass
@@ -85,7 +85,7 @@ class AgentXConfig:
     mcp: McpConfig = field(default_factory=McpConfig)
 
 
-# 構建並返回執行時配置：預設值 → 全域性 TOML → 專案本地 TOML → .env → 系統環境變數（後者優先順序最高）
+# 建立執行設定：預設值 → 全域 TOML → 專案 TOML → .env → 環境變數
 def get_config() -> AgentXConfig:
     config = AgentXConfig()
 
@@ -117,7 +117,16 @@ def get_config() -> AgentXConfig:
 
 # 將已解析的 TOML 根表寫入 config；未知小節或型別錯誤時退出程式
 def _apply_toml(config: AgentXConfig, data: dict[str, Any]) -> None:
-    unknown = set(data.keys()) - {"core", "logging", "agent", "llm", "trace", "permission", "compaction", "mcp"}
+    unknown = set(data.keys()) - {
+        "core",
+        "logging",
+        "agent",
+        "llm",
+        "trace",
+        "permission",
+        "compaction",
+        "mcp",
+    }
     if unknown:
         raise SystemExit(f"Unknown top-level config keys: {', '.join(sorted(unknown))}")
 
@@ -224,7 +233,11 @@ def _apply_toml(config: AgentXConfig, data: dict[str, Any]) -> None:
         comp = data["compaction"]
         if not isinstance(comp, dict):
             raise SystemExit("Config error: [compaction] must be a table")
-        unknown_comp: set[str] = set(comp.keys()) - {"auto_threshold", "tool_result_limit", "tool_result_keep"}
+        unknown_comp: set[str] = set(comp.keys()) - {
+            "auto_threshold",
+            "tool_result_limit",
+            "tool_result_keep",
+        }
         if unknown_comp:
             raise SystemExit(f"Unknown [compaction] keys: {', '.join(sorted(unknown_comp))}")
         if "auto_threshold" in comp:
@@ -235,12 +248,16 @@ def _apply_toml(config: AgentXConfig, data: dict[str, Any]) -> None:
         if "tool_result_limit" in comp:
             val = comp["tool_result_limit"]
             if not isinstance(val, int) or val <= 0:
-                raise SystemExit("Config error: compaction.tool_result_limit must be a positive integer")
+                raise SystemExit(
+                    "Config error: compaction.tool_result_limit must be a positive integer"
+                )
             config.compaction.tool_result_limit = val
         if "tool_result_keep" in comp:
             val = comp["tool_result_keep"]
             if not isinstance(val, int) or val <= 0:
-                raise SystemExit("Config error: compaction.tool_result_keep must be a positive integer")
+                raise SystemExit(
+                    "Config error: compaction.tool_result_keep must be a positive integer"
+                )
             config.compaction.tool_result_keep = val
 
     if "mcp" in data:
@@ -261,7 +278,9 @@ def _apply_toml(config: AgentXConfig, data: dict[str, Any]) -> None:
                 raise SystemExit(f"Config error: mcp.servers[{i}].name must be a non-empty string")
             transport = srv.get("transport", "stdio")
             if transport not in ("stdio", "tcp"):
-                raise SystemExit(f"Config error: mcp.servers[{i}].transport must be 'stdio' or 'tcp'")
+                raise SystemExit(
+                    f"Config error: mcp.servers[{i}].transport must be 'stdio' or 'tcp'"
+                )
             s = McpServerConfig(name=name, transport=transport)
             if "command" in srv:
                 val = srv["command"]
@@ -367,12 +386,14 @@ def _apply_env(config: AgentXConfig) -> None:
             compact_threshold_val = float(compact_threshold)
             if not (0.0 <= compact_threshold_val <= 1.0):
                 raise SystemExit(
-                    f"Config error: AGENTX_COMPACT_THRESHOLD must be between 0 and 1, got: {compact_threshold!r}"
+                    "Config error: AGENTX_COMPACT_THRESHOLD must be between 0 and 1, "
+                    f"got: {compact_threshold!r}"
                 )
             config.compaction.auto_threshold = compact_threshold_val
         except ValueError:
             raise SystemExit(
-                f"Config error: AGENTX_COMPACT_THRESHOLD must be a number, got: {compact_threshold!r}"
+                "Config error: AGENTX_COMPACT_THRESHOLD must be a number, "
+                f"got: {compact_threshold!r}"
             )
 
     compact_tool_limit = os.environ.get("AGENTX_COMPACT_TOOL_LIMIT")
@@ -381,12 +402,14 @@ def _apply_env(config: AgentXConfig) -> None:
             compact_tool_limit_val = int(compact_tool_limit)
             if compact_tool_limit_val <= 0:
                 raise SystemExit(
-                    f"Config error: AGENTX_COMPACT_TOOL_LIMIT must be a positive integer, got: {compact_tool_limit!r}"
+                    "Config error: AGENTX_COMPACT_TOOL_LIMIT must be a positive integer, "
+                    f"got: {compact_tool_limit!r}"
                 )
             config.compaction.tool_result_limit = compact_tool_limit_val
         except ValueError:
             raise SystemExit(
-                f"Config error: AGENTX_COMPACT_TOOL_LIMIT must be an integer, got: {compact_tool_limit!r}"
+                "Config error: AGENTX_COMPACT_TOOL_LIMIT must be an integer, "
+                f"got: {compact_tool_limit!r}"
             )
 
     compact_tool_keep = os.environ.get("AGENTX_COMPACT_TOOL_KEEP")
@@ -395,10 +418,12 @@ def _apply_env(config: AgentXConfig) -> None:
             compact_tool_keep_val = int(compact_tool_keep)
             if compact_tool_keep_val <= 0:
                 raise SystemExit(
-                    f"Config error: AGENTX_COMPACT_TOOL_KEEP must be a positive integer, got: {compact_tool_keep!r}"
+                    "Config error: AGENTX_COMPACT_TOOL_KEEP must be a positive integer, "
+                    f"got: {compact_tool_keep!r}"
                 )
             config.compaction.tool_result_keep = compact_tool_keep_val
         except ValueError:
             raise SystemExit(
-                f"Config error: AGENTX_COMPACT_TOOL_KEEP must be an integer, got: {compact_tool_keep!r}"
+                "Config error: AGENTX_COMPACT_TOOL_KEEP must be an integer, "
+                f"got: {compact_tool_keep!r}"
             )

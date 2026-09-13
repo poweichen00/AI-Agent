@@ -17,9 +17,10 @@ class McpTool(BaseTool):
         self._tool_def = tool_def
         self.name = f"{server_name}__{tool_def.name}"
         self.description = tool_def.description or f"MCP tool from {server_name}"
-        self.input_schema: dict[str, Any] = (
-            tool_def.input_schema or {"type": "object", "properties": {}}
-        )
+        self.input_schema: dict[str, Any] = tool_def.input_schema or {
+            "type": "object",
+            "properties": {},
+        }
 
     # 呼叫 MCP server 上的工具，連線不可用或工具執行失敗時返回 is_error=True
     async def invoke(self, params: dict[str, object]) -> ToolResult:

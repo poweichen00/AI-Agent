@@ -132,7 +132,8 @@ class CoreApp:
         cmd = PermissionRespondCommand.model_validate(params)
         logger.info(
             "permission.respond received tool_use_id=%s decision=%s",
-            cmd.tool_use_id, cmd.decision,
+            cmd.tool_use_id,
+            cmd.decision,
         )
         if self._permission_manager is None:
             logger.error("permission.respond: PermissionManager not initialized")
@@ -161,9 +162,7 @@ class CoreApp:
 
         replayed_count = 0
         if cmd.replay_from_run is not None:
-            replayed_count = await self._replay_events(
-                cmd.replay_from_run, writer, cmd.topics
-            )
+            replayed_count = await self._replay_events(cmd.replay_from_run, writer, cmd.topics)
 
         assert self._broadcaster is not None
         sub_id = self._broadcaster.subscribe(writer, cmd.topics, cmd.scope)
@@ -178,8 +177,8 @@ class CoreApp:
     ) -> int:
         path = events_file(run_id)
         if not path.exists():
-            for candidate in Path("~/.agentx/sessions").expanduser().glob(
-                f"*/runs/{run_id}/events.jsonl"
+            for candidate in (
+                Path("~/.agentx/sessions").expanduser().glob(f"*/runs/{run_id}/events.jsonl")
             ):
                 path = candidate
                 break

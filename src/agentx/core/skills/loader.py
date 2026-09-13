@@ -27,22 +27,24 @@ def _parse_skill_file(path: Path) -> Skill:
     m = _FRONTMATTER_RE.match(text)
     if m:
         front = m.group(1)
-        body = text[m.end():]
+        body = text[m.end() :]
         lines = front.splitlines()
         i = 0
         while i < len(lines):
             line = lines[i]
             stripped = line.strip()
             if stripped.startswith("name:"):
-                name = stripped[len("name:"):].strip().strip('"').strip("'")
+                name = stripped[len("name:") :].strip().strip('"').strip("'")
             elif stripped.startswith("description:"):
-                val = stripped[len("description:"):].strip().strip('"').strip("'")
+                val = stripped[len("description:") :].strip().strip('"').strip("'")
                 # YAML 塊標量：> (摺疊) 或 | (保留換行)，後續縮排行是內容
                 if val in (">", "|"):
                     fold = val == ">"
                     parts: list[str] = []
                     i += 1
-                    while i < len(lines) and (lines[i].startswith(" ") or lines[i].startswith("\t")):
+                    while i < len(lines) and (
+                        lines[i].startswith(" ") or lines[i].startswith("\t")
+                    ):
                         parts.append(lines[i].strip())
                         i += 1
                     description = (" ".join(parts) if fold else "\n".join(parts)).strip()

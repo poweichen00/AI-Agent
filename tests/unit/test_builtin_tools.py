@@ -10,6 +10,7 @@ from agentx.core.tools.builtin.write_file import WriteFileTool
 
 # ── bash ──────────────────────────────────────────────────────────────────────
 
+
 # 功能：驗證成功命令的 stdout 出現在 ToolResult.content 中，is_error 為 False
 # 設計：用 echo 命令避免外部依賴，直接比較輸出內容，無需 mock
 @pytest.mark.asyncio
@@ -48,14 +49,13 @@ async def test_bash_stderr_merged() -> None:
 
 # ── write_file ────────────────────────────────────────────────────────────────
 
+
 # 功能：驗證 write_file 寫入檔案後內容可以被讀取，返回位元組數
 # 設計：寫入臨時目錄，斷言檔案存在且內容一致；用 tmp_path fixture 自動清理
 @pytest.mark.asyncio
 async def test_write_file_creates_and_returns_size(tmp_path: Path) -> None:
     target = tmp_path / "out.txt"
-    result = await WriteFileTool().invoke(
-        {"path": str(target), "content": "hello world"}
-    )
+    result = await WriteFileTool().invoke({"path": str(target), "content": "hello world"})
     assert not result.is_error
     assert "11" in result.content  # "hello world" = 11 bytes
     assert target.read_text() == "hello world"
@@ -80,6 +80,7 @@ async def test_write_file_rejects_traversal() -> None:
 
 
 # ── list_dir ──────────────────────────────────────────────────────────────────
+
 
 # 功能：驗證 list_dir 輸出包含目錄中的檔名
 # 設計：在 tmp_path 建立已知結構，斷言檔名出現在 content 中；不約束格式細節

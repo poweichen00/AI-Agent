@@ -110,13 +110,21 @@ class AnthropicProvider:
                 if attempt == _MAX_STREAM_RETRIES:
                     log.error(
                         "stream failed after %d attempts run_id=%s step=%d: %s",
-                        _MAX_STREAM_RETRIES, run_id, step, exc,
+                        _MAX_STREAM_RETRIES,
+                        run_id,
+                        step,
+                        exc,
                     )
                     raise
                 delay = _RETRY_BACKOFF_S[attempt - 1]
                 log.warning(
                     "stream dropped (attempt %d/%d) run_id=%s step=%d: %s — retrying in %.0fs",
-                    attempt, _MAX_STREAM_RETRIES, run_id, step, exc, delay,
+                    attempt,
+                    _MAX_STREAM_RETRIES,
+                    run_id,
+                    step,
+                    exc,
+                    delay,
                 )
                 await asyncio.sleep(delay)
 
@@ -148,7 +156,9 @@ class AnthropicProvider:
                 )
             elif block.type == "thinking":
                 # thinking blocks must be passed back verbatim in subsequent requests
-                thinking_blocks.append({"type": "thinking", "thinking": block.thinking, "signature": block.signature})
+                thinking_blocks.append(
+                    {"type": "thinking", "thinking": block.thinking, "signature": block.signature}
+                )
 
         return LlmResponse(
             stop_reason=final_message.stop_reason or "end_turn",

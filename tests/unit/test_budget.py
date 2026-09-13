@@ -54,13 +54,15 @@ def test_non_tool_result_block_untouched() -> None:
 def test_multiple_tool_results_independent() -> None:
     short = "s" * 100
     long = "l" * 10_000
-    msgs = [{
-        "role": "user",
-        "content": [
-            {"type": "tool_result", "tool_use_id": "a", "content": short},
-            {"type": "tool_result", "tool_use_id": "b", "content": long},
-        ],
-    }]
+    msgs = [
+        {
+            "role": "user",
+            "content": [
+                {"type": "tool_result", "tool_use_id": "a", "content": short},
+                {"type": "tool_result", "tool_use_id": "b", "content": long},
+            ],
+        }
+    ]
     result = truncate_tool_results(msgs, limit=8000, keep=4000)
     blocks = result[0]["content"]
     assert blocks[0]["content"] == short

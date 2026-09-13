@@ -11,9 +11,9 @@ from agentx.core.trace.record import TraceRecord
 _COLORS = {
     "CLIENT→CORE": "\033[36m",
     "CORE→CLIENT": "\033[33m",
-    "CORE":             "\033[32m",
-    "CORE→LLM":   "\033[35m",
-    "LLM→CORE":   "\033[34m",
+    "CORE": "\033[32m",
+    "CORE→LLM": "\033[35m",
+    "LLM→CORE": "\033[34m",
 }
 _RESET = "\033[0m"
 _BOLD = "\033[1m"

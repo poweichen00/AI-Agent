@@ -97,8 +97,9 @@ async def _chat_async(config: AgentXConfig) -> int:
             if printer.pending_permission_id:
                 decision = _DECISION_MAP.get(content.lower())
                 if decision is None:
-                    print("  enter y (allow once), a (always allow), "
-                          "n (deny once), d (always deny)")
+                    print(
+                        "  enter y (allow once), a (always allow), n (deny once), d (always deny)"
+                    )
                     continue
                 tool_use_id = printer.pending_permission_id
                 printer.pending_permission_id = None

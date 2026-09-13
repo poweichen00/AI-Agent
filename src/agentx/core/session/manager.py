@@ -169,16 +169,23 @@ class SessionManager:
         async with lock:
             from agentx.core.bus.commands import SessionCompactResult
             from agentx.core.compact.compactor import Compactor
+
             messages = self._store.read_messages(sid)
             session_dir = self._store.session_dir(sid)
             compactor = Compactor(self._bus, session_dir, sid)
             result = await compactor.compact_messages(messages, self._provider, focus=focus)
             if result is None:
                 raise HandlerError(-32021, "compaction failed or not beneficial")
-            self._store.write_compacted(sid, [
-                {"role": "user", "content": result.summary_text},
-                {"role": "assistant", "content": "Understood, I'll continue from this summary."},
-            ])
+            self._store.write_compacted(
+                sid,
+                [
+                    {"role": "user", "content": result.summary_text},
+                    {
+                        "role": "assistant",
+                        "content": "Understood, I'll continue from this summary.",
+                    },
+                ],
+            )
             return SessionCompactResult(
                 summary_tokens=result.summary_tokens,
                 saved_tokens=max(0, result.original_token_estimate - result.summary_tokens),

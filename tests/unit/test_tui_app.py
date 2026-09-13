@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from rich.markdown import Markdown
 from textual.widget import Widget
 
@@ -75,9 +77,9 @@ def test_run_started_appends_widget_with_content() -> None:
     appended: list[Widget] = []
     app._append = lambda w: appended.append(w)  # type: ignore[method-assign]
 
-    app._handle_event({
-        "type": "run.started", "run_id": "run-abc", "goal": "do the thing", "ts": "t"
-    })
+    app._handle_event(
+        {"type": "run.started", "run_id": "run-abc", "goal": "do the thing", "ts": "t"}
+    )
 
     assert len(appended) == 1
     rendered = appended[0].content
@@ -92,9 +94,9 @@ def test_run_finished_success_shows_completed() -> None:
     appended: list[Widget] = []
     app._append = lambda w: appended.append(w)  # type: ignore[method-assign]
 
-    app._handle_event({
-        "type": "run.finished", "run_id": "r", "status": "success", "steps": 3, "ts": "t"
-    })
+    app._handle_event(
+        {"type": "run.finished", "run_id": "r", "status": "success", "steps": 3, "ts": "t"}
+    )
 
     rendered = appended[0].content
     assert "completed" in rendered
@@ -108,10 +110,16 @@ def test_run_finished_failed_shows_red() -> None:
     appended: list[Widget] = []
     app._append = lambda w: appended.append(w)  # type: ignore[method-assign]
 
-    app._handle_event({
-        "type": "run.finished", "run_id": "r", "status": "failed",
-        "steps": 1, "reason": "llm_error", "ts": "t"
-    })
+    app._handle_event(
+        {
+            "type": "run.finished",
+            "run_id": "r",
+            "status": "failed",
+            "steps": 1,
+            "reason": "llm_error",
+            "ts": "t",
+        }
+    )
 
     rendered = appended[0].content
     assert "failed" in rendered
@@ -125,23 +133,29 @@ def test_tool_call_started_and_finished() -> None:
     appended: list[Widget] = []
     app._append = lambda w: appended.append(w)  # type: ignore[method-assign]
 
-    app._handle_event({
-        "type": "tool.call_started",
-        "tool_use_id": "uid-1",
-        "tool_name": "bash",
-        "params": {"command": "echo hi"},
-        "run_id": "r", "ts": "t",
-    })
+    app._handle_event(
+        {
+            "type": "tool.call_started",
+            "tool_use_id": "uid-1",
+            "tool_name": "bash",
+            "params": {"command": "echo hi"},
+            "run_id": "r",
+            "ts": "t",
+        }
+    )
     assert "uid-1" in app._pending_tool_blocks  # type: ignore[attr-defined]
 
-    app._handle_event({
-        "type": "tool.call_finished",
-        "tool_use_id": "uid-1",
-        "tool_name": "bash",
-        "elapsed_ms": 42,
-        "output": "hi",
-        "run_id": "r", "ts": "t",
-    })
+    app._handle_event(
+        {
+            "type": "tool.call_finished",
+            "tool_use_id": "uid-1",
+            "tool_name": "bash",
+            "elapsed_ms": 42,
+            "output": "hi",
+            "run_id": "r",
+            "ts": "t",
+        }
+    )
     assert "uid-1" not in app._pending_tool_blocks  # type: ignore[attr-defined]
     block = appended[0]
     assert isinstance(block, ToolCallBlock)
@@ -203,6 +217,6 @@ def test_unknown_event_silently_ignored() -> None:
 
     app._handle_event({"type": "some.unknown.type", "run_id": "r", "ts": "t"})
     assert appended == []
-import os
+
 
 assert os.environ.get("TEXTUAL_DISABLE_KITTY_KEY") == "1"

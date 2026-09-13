@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
@@ -10,7 +11,6 @@ from agentx.core.events.bus import EventBus
 from agentx.core.llm.base import LLMProvider
 from agentx.core.tools.invocation import invoke_tool
 from agentx.core.tools.registry import ToolRegistry
-import logging
 
 if TYPE_CHECKING:
     from agentx.core.compact.compactor import Compactor
@@ -19,12 +19,13 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
+
 def _now() -> str:
     return datetime.now(UTC).isoformat()
 
 
 class AgentLoop:
-    # 初始化迴圈所需依賴：LLM provider、工具登入檔、事件匯流排，以及可選的許可權管理器、壓縮器和 session ID
+    # 初始化 LLM、工具、事件匯流排及可選的權限管理器與壓縮器
     def __init__(
         self,
         provider: LLMProvider,
@@ -83,16 +84,17 @@ class AgentLoop:
             if response.text:
                 blocks.append({"type": "text", "text": response.text})
             for tc in response.tool_calls:
-                blocks.append(
-                    {"type": "tool_use", "id": tc.id, "name": tc.name, "input": tc.input}
-                )
+                blocks.append({"type": "tool_use", "id": tc.id, "name": tc.name, "input": tc.input})
             context.add_assistant_message(blocks)
 
             # [act] execute each requested tool; errors become tool results so loop continues
             if response.stop_reason == "tool_use":
                 for tc in response.tool_calls:
                     result = await invoke_tool(
-                        self._registry, tc, self._bus, context.run_id,
+                        self._registry,
+                        tc,
+                        self._bus,
+                        context.run_id,
                         permission_manager=self._permission_manager,
                         session_id=self._session_id,
                     )
@@ -103,7 +105,8 @@ class AgentLoop:
                 for tc in response.tool_calls:
                     context.add_tool_result(
                         tc.id,
-                        "Error: output token limit reached before this tool call could be completed. "
+                        "Error: output token limit reached before this tool call "
+                        "could be completed. "
                         "Please break the task into smaller steps and try again.",
                         is_error=True,
                     )

@@ -14,11 +14,11 @@ class PermissionDecision(StrEnum):
 
 # 檢測 bash 命令是否操作 cwd 之外路徑的正則規則列表（強制觸發 ASK，不可被 allow_patterns 繞過）
 OUTSIDE_CWD_HEURISTICS: list[str] = [
-    r"(^|\s)/[^\s]",              # absolute path
-    r"(^|\s)~",                   # tilde home
-    r"(^|\s)\.\.(/|$|\s)",        # parent traversal
-    r"\$\{?HOME\b",               # $HOME variable
-    r"\$\{?PWD\b",                # $PWD variable
+    r"(^|\s)/[^\s]",  # absolute path
+    r"(^|\s)~",  # tilde home
+    r"(^|\s)\.\.(/|$|\s)",  # parent traversal
+    r"\$\{?HOME\b",  # $HOME variable
+    r"\$\{?PWD\b",  # $PWD variable
     r"(^|\s|;|&&|\|\|)cd(\s|$)",  # explicit cd
 ]
 
@@ -38,11 +38,11 @@ class ToolPolicy:
 
 
 DEFAULT_POLICIES: dict[str, ToolPolicy] = {
-    "bash":       ToolPolicy(default=PermissionDecision.ASK),
+    "bash": ToolPolicy(default=PermissionDecision.ASK),
     "write_file": ToolPolicy(default=PermissionDecision.ASK),
-    "read_file":  ToolPolicy(default=PermissionDecision.ALLOW),
-    "list_dir":   ToolPolicy(default=PermissionDecision.ALLOW),
-    "note_save":  ToolPolicy(default=PermissionDecision.ALLOW),
+    "read_file": ToolPolicy(default=PermissionDecision.ALLOW),
+    "list_dir": ToolPolicy(default=PermissionDecision.ALLOW),
+    "note_save": ToolPolicy(default=PermissionDecision.ALLOW),
 }
 
 # 未在 DEFAULT_POLICIES 中登記的工具的兜底策略
@@ -50,11 +50,11 @@ _UNKNOWN_TOOL_DEFAULT = PermissionDecision.ASK
 
 # bash 引數中展示用的關鍵欄位對映
 _PREVIEW_KEY: dict[str, str] = {
-    "bash":       "command",
-    "read_file":  "path",
+    "bash": "command",
+    "read_file": "path",
     "write_file": "path",
-    "list_dir":   "path",
-    "note_save":  "content",
+    "list_dir": "path",
+    "note_save": "content",
 }
 _PREVIEW_MAX = 60
 

@@ -9,9 +9,7 @@ from agentx.cli.commands.run import StdoutPrinter
 # 設計：用 capsys 捕獲 stdout，直接斷言關鍵字串，避免對格式細節過度約束
 async def test_run_started_prints_run_id(capsys: pytest.CaptureFixture[str]) -> None:
     printer = StdoutPrinter()
-    await printer.handle(
-        {"type": "run.started", "run_id": "20260515-abc", "goal": "g", "ts": "t"}
-    )
+    await printer.handle({"type": "run.started", "run_id": "20260515-abc", "goal": "g", "ts": "t"})
     out = capsys.readouterr().out
     assert "[run]" in out
     assert "20260515-abc" in out
@@ -70,9 +68,7 @@ async def test_tool_call_started_prints_name_and_params(
 # 設計：success 路徑下斷言 status 和 steps 出現在輸出中，不檢查 elapsed 的精確值（依賴時間）
 async def test_run_finished_prints_status_and_steps(capsys: pytest.CaptureFixture[str]) -> None:
     printer = StdoutPrinter()
-    await printer.handle(
-        {"type": "run.started", "run_id": "r", "goal": "g", "ts": "t"}
-    )
+    await printer.handle({"type": "run.started", "run_id": "r", "goal": "g", "ts": "t"})
     await printer.handle(
         {"type": "run.finished", "run_id": "r", "status": "success", "steps": 4, "ts": "t"}
     )

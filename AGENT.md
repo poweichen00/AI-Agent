@@ -37,7 +37,7 @@ uv run agentx --version
 
 ## Architecture
 
-This is a **dual-process** local AI agent system. `agentx-core` is a persistent daemon; `agentx` and `agentx-tui` are clients that connect to it over a Unix domain socket.
+This is a **dual-process** local AI agent system. `agentx-core` is a persistent daemon; `agentx` and `agentx-tui` are clients that connect to it over TCP.
 
 ```
 agentx-core (daemon)

@@ -52,7 +52,7 @@ def test_missing_env_file_silent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 # 設計：.env 指向自定義 TOML 檔案，TOML 中寫入不同埠，確認 .env 在 TOML 載入前被讀取（優先順序鏈的正確順序）
 def test_dotenv_before_toml_agentx_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     toml_path = tmp_path / "custom.toml"
-    toml_path.write_bytes(b'[core]\nport = 5555\n')
+    toml_path.write_bytes(b"[core]\nport = 5555\n")
 
     env_file = tmp_path / ".env"
     _write_env(env_file, f"AGENTX_CONFIG={toml_path}\n")
@@ -73,7 +73,7 @@ def test_priority_chain_full(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
     # .env：7000
     # 系統環境變數：8000（最高）
     toml_path = tmp_path / "agentx.toml"
-    toml_path.write_bytes(b'[core]\nport = 6000\n')
+    toml_path.write_bytes(b"[core]\nport = 6000\n")
 
     env_file = tmp_path / ".env"
     _write_env(env_file, "AGENTX_PORT=7000\n")

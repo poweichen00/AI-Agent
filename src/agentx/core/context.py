@@ -48,9 +48,7 @@ class ExecutionContext:
         self.messages.append({"role": "assistant", "content": content})
 
     # 將工具呼叫結果追加為 user 訊息；同一步的多個結果共享同一條訊息
-    def add_tool_result(
-        self, tool_use_id: str, content: str, is_error: bool = False
-    ) -> None:
+    def add_tool_result(self, tool_use_id: str, content: str, is_error: bool = False) -> None:
         block: dict[str, Any] = {
             "type": "tool_result",
             "tool_use_id": tool_use_id,

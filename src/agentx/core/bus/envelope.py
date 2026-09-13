@@ -35,11 +35,11 @@ class JsonRpcError(BaseModel):
     error: JsonRpcErrorObject
 
 
-PARSE_ERROR = -32700      # 解析錯誤
+PARSE_ERROR = -32700  # 解析錯誤
 INVALID_REQUEST = -32600  # 請求格式錯誤
-METHOD_NOT_FOUND = -32601 # 方法不存在
-INVALID_PARAMS = -32602   # 引數錯誤
-INTERNAL_ERROR = -32603   # 伺服器內部錯誤
+METHOD_NOT_FOUND = -32601  # 方法不存在
+INVALID_PARAMS = -32602  # 引數錯誤
+INTERNAL_ERROR = -32603  # 伺服器內部錯誤
 
 
 class HandlerError(Exception):

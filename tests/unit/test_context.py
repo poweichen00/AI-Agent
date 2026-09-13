@@ -65,10 +65,12 @@ def test_add_tool_result_creates_user_message() -> None:
 # 設計：連續兩次 add_tool_result，斷言訊息總數為 3（goal + assistant + 合併 user）；Anthropic API 要求同一輪 tool_result 合併提交
 def test_multiple_tool_results_share_one_message() -> None:
     ctx = ExecutionContext(run_id="r1", goal="g", max_steps=5)
-    ctx.add_assistant_message([
-        {"type": "tool_use", "id": "toolu_01", "name": "read_file", "input": {}},
-        {"type": "tool_use", "id": "toolu_02", "name": "read_file", "input": {}},
-    ])
+    ctx.add_assistant_message(
+        [
+            {"type": "tool_use", "id": "toolu_01", "name": "read_file", "input": {}},
+            {"type": "tool_use", "id": "toolu_02", "name": "read_file", "input": {}},
+        ]
+    )
     ctx.add_tool_result("toolu_01", "result A")
     ctx.add_tool_result("toolu_02", "result B")
 
@@ -85,9 +87,7 @@ def test_multiple_tool_results_share_one_message() -> None:
 # 設計：傳入 is_error=True 後檢查 block 中的欄位，確認錯誤標記不丟失，LLM 在下一步能感知工具失敗
 def test_tool_result_error_flag() -> None:
     ctx = ExecutionContext(run_id="r1", goal="g", max_steps=5)
-    ctx.add_assistant_message(
-        [{"type": "tool_use", "id": "t1", "name": "x", "input": {}}]
-    )
+    ctx.add_assistant_message([{"type": "tool_use", "id": "t1", "name": "x", "input": {}}])
     ctx.add_tool_result("t1", "something failed", is_error=True)
     block = ctx.messages[-1]["content"][0]
     assert block["is_error"] is True

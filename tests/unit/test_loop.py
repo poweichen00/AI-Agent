@@ -123,10 +123,12 @@ async def test_max_steps_marks_failed() -> None:
 # 功能：驗證"調工具 → end_turn"的兩步路徑最終標記為 success
 # 設計：provider 返回 [tool_use, end_turn] 序列，註冊真實 EchoTool，覆蓋最常見的正常工作路徑
 async def test_tool_use_then_end_turn_marks_success() -> None:
-    provider = _MockProvider([
-        LlmResponse(stop_reason="tool_use", tool_calls=[_tc()]),
-        LlmResponse(stop_reason="end_turn", text="summary"),
-    ])
+    provider = _MockProvider(
+        [
+            LlmResponse(stop_reason="tool_use", tool_calls=[_tc()]),
+            LlmResponse(stop_reason="end_turn", text="summary"),
+        ]
+    )
     registry = ToolRegistry()
     registry.register(_EchoTool())
     loop, _ = _make_loop(provider, registry)
@@ -139,10 +141,12 @@ async def test_tool_use_then_end_turn_marks_success() -> None:
 # 功能：驗證工具結果按 Anthropic 格式（tool_result user 訊息）追加到訊息歷史
 # 設計：檢查 messages[2]（tool_result 所在位置），斷言 tool_use_id 和 content，確認 loop 正確呼叫了 context.add_tool_result
 async def test_tool_result_appended_to_context() -> None:
-    provider = _MockProvider([
-        LlmResponse(stop_reason="tool_use", tool_calls=[_tc(inp={"msg": "hello"})]),
-        LlmResponse(stop_reason="end_turn"),
-    ])
+    provider = _MockProvider(
+        [
+            LlmResponse(stop_reason="tool_use", tool_calls=[_tc(inp={"msg": "hello"})]),
+            LlmResponse(stop_reason="end_turn"),
+        ]
+    )
     registry = ToolRegistry()
     registry.register(_EchoTool())
     loop, _ = _make_loop(provider, registry)
@@ -159,10 +163,12 @@ async def test_tool_result_appended_to_context() -> None:
 # 功能：驗證工具失敗時 loop 不終止，而是將錯誤追加上下文讓 LLM 重新決策
 # 設計：工具始終 raise + provider 第二步返回 end_turn，確認 loop 最終到達 success；這是 agent 區別於普通指令碼的核心特性
 async def test_tool_failure_loop_continues_to_success() -> None:
-    provider = _MockProvider([
-        LlmResponse(stop_reason="tool_use", tool_calls=[_tc("fail", {})]),
-        LlmResponse(stop_reason="end_turn", text="handled error"),
-    ])
+    provider = _MockProvider(
+        [
+            LlmResponse(stop_reason="tool_use", tool_calls=[_tc("fail", {})]),
+            LlmResponse(stop_reason="end_turn", text="handled error"),
+        ]
+    )
     registry = ToolRegistry()
     registry.register(_FailTool())
     loop, _ = _make_loop(provider, registry)
@@ -175,10 +181,12 @@ async def test_tool_failure_loop_continues_to_success() -> None:
 # 功能：驗證工具失敗的錯誤資訊以 is_error=True 追加進上下文，讓 LLM 能感知工具呼叫失敗
 # 設計：檢查 tool_result block 中的 is_error 標記，與 test_tool_failure_loop_continues_to_success 互補
 async def test_tool_failure_result_is_error_in_context() -> None:
-    provider = _MockProvider([
-        LlmResponse(stop_reason="tool_use", tool_calls=[_tc("fail", {})]),
-        LlmResponse(stop_reason="end_turn"),
-    ])
+    provider = _MockProvider(
+        [
+            LlmResponse(stop_reason="tool_use", tool_calls=[_tc("fail", {})]),
+            LlmResponse(stop_reason="end_turn"),
+        ]
+    )
     registry = ToolRegistry()
     registry.register(_FailTool())
     loop, _ = _make_loop(provider, registry)
@@ -229,11 +237,13 @@ async def test_step_started_and_finished_events_published() -> None:
 # 功能：驗證多步執行後 step 計數器正確累積到步數總量
 # 設計：三步序列 [tool_use, tool_use, end_turn]，確認 step==3，排除計數器初始化錯誤或某步未遞增的情況
 async def test_step_counter_increments_across_steps() -> None:
-    provider = _MockProvider([
-        LlmResponse(stop_reason="tool_use", tool_calls=[_tc()]),
-        LlmResponse(stop_reason="tool_use", tool_calls=[_tc()]),
-        LlmResponse(stop_reason="end_turn"),
-    ])
+    provider = _MockProvider(
+        [
+            LlmResponse(stop_reason="tool_use", tool_calls=[_tc()]),
+            LlmResponse(stop_reason="tool_use", tool_calls=[_tc()]),
+            LlmResponse(stop_reason="end_turn"),
+        ]
+    )
     registry = ToolRegistry()
     registry.register(_EchoTool())
     loop, _ = _make_loop(provider, registry)

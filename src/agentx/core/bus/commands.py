@@ -29,8 +29,8 @@ class AgentRunResult(BaseModel):
 
 class EventSubscribeCommand(BaseModel):
     type: Literal["event.subscribe"] = "event.subscribe"
-    topics: list[str]          # fnmatch 模式，如 ["step.*", "tool.*"]
-    scope: str = "global"      # "global" | "run:<run_id>"
+    topics: list[str]  # fnmatch 模式，如 ["step.*", "tool.*"]
+    scope: str = "global"  # "global" | "run:<run_id>"
     replay_from_run: str | None = None  # 設定則先從 events.jsonl 回放歷史再接即時流
 
 

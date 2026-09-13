@@ -52,9 +52,7 @@ class BashTool(BaseTool):
                 stderr=asyncio.subprocess.STDOUT,
             )
             try:
-                stdout_bytes, _ = await asyncio.wait_for(
-                    proc.communicate(), timeout=timeout
-                )
+                stdout_bytes, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout)
             except TimeoutError:
                 proc.kill()
                 await proc.communicate()

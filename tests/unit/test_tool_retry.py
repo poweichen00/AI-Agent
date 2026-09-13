@@ -12,8 +12,10 @@ from agentx.core.tools.registry import ToolRegistry
 
 # --- stub tools --------------------------------------------------------------
 
+
 class _FailNTimes(BaseTool):
     """Fails with runtime_error for the first n calls, then succeeds."""
+
     name = "fail_n"
     description = "Fails n times then succeeds"
     input_schema: dict[str, object] = {"type": "object", "properties": {}, "required": []}
@@ -31,6 +33,7 @@ class _FailNTimes(BaseTool):
 
 class _RateLimitedNTimes(BaseTool):
     """Raises RateLimitedError for the first n calls, then succeeds."""
+
     name = "rate_n"
     description = "Rate-limits n times then succeeds"
     input_schema: dict[str, object] = {"type": "object", "properties": {}, "required": []}
@@ -58,6 +61,7 @@ class _AlwaysFails(BaseTool):
 
 
 # --- helper ------------------------------------------------------------------
+
 
 def _call(name: str) -> ToolCallBlock:
     return ToolCallBlock(id="t1", name=name, input={})
@@ -171,7 +175,13 @@ async def test_timeout_no_retry(monkeypatch: pytest.MonkeyPatch) -> None:
 # 功能：驗證成功後的 tool.call_failed 事件中 error_class 欄位存在且取值合法
 # 設計：_FailNTimes(2) 兩次失敗後成功，檢查所有 failed 事件的 error_class 均在合法列舉內
 async def test_failed_event_has_valid_error_class(monkeypatch: pytest.MonkeyPatch) -> None:
-    valid_classes = {"runtime_error", "timeout", "schema_error", "permission_denied", "rate_limited"}
+    valid_classes = {
+        "runtime_error",
+        "timeout",
+        "schema_error",
+        "permission_denied",
+        "rate_limited",
+    }
     result, events = await _run(_FailNTimes(2), monkeypatch=monkeypatch)
     assert not result.is_error
     for e in events:
