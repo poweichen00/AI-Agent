@@ -41,7 +41,7 @@ AgentX 將真正執行任務的能力放進常駐的 `agentx-core`，CLI 與 TUI
 
 - **任務不中斷**：TUI 關閉或重新連線時，Core 中的任務仍可持續執行。
 - **過程可追蹤**：不只顯示最後答案，也儲存每個 Run 的事件與完整 Trace。
-- **工具可治理**：具有副作用的操作必須經過權限策略，避免模型直接執行危險命令。
+- **工具可治理**：修改檔案或執行命令前必須通過權限檢查，避免模型直接進行危險操作。
 - **長會話可續航**：系統會顯示 Context 水位，並可將歷史壓縮成可接續的交接摘要。
 - **複雜任務可分工**：父 Agent 負責協調，子 Agent 依角色進行規劃、執行與審查。
 - **外部能力可插拔**：MCP 工具可直接加入既有執行鏈路，不必修改 AgentLoop。
@@ -69,7 +69,7 @@ AgentX 將真正執行任務的能力放進常駐的 `agentx-core`，CLI 與 TUI
 2. Core 驗證 JSON-RPC Request，並將 method 交給對應 Handler。
 3. `SessionManager` 建立或延續會話，再由 `AgentRunner` 啟動任務。
 4. `AgentLoop` 持續呼叫 LLM、執行內建工具或 MCP 工具，直到任務完成。
-5. 具有副作用的工具先通過 `PermissionManager`，必要時等待使用者審批。
+5. 執行可能修改系統狀態的工具前，`PermissionManager` 會先檢查權限；需要確認時，再由使用者決定是否允許。
 6. `EventBus` 將即時事件推送到 TUI，並同步寫入 `events.jsonl` 與 Trace。
 
 ---
