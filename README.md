@@ -15,6 +15,10 @@ AgentX 以常駐 Core 執行 ReAct Agent，並透過 CLI 或 TUI 操作同一份
 
 AgentX 將任務執行與操作介面分離：`agentx-core` 負責會話、模型呼叫、工具執行與事件保存；CLI 和 TUI 則作為客戶端連線到 Core。即使介面中途關閉，任務仍可繼續執行，重新連線後也能回放先前事件。
 
+<p align="center">
+  <img src="docs/images/agentx-tui.png" alt="AgentX TUI 執行畫面" width="100%">
+</p>
+
 > [!WARNING]
 > AgentX 可以執行終端指令與修改檔案。建議先在測試專案中使用、仔細確認權限提示，並避免直接在含有敏感資料的目錄執行。
 
